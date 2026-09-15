@@ -628,8 +628,8 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                     const isLink = !!ph.externalUrl;
                     const imgKey = `${activeProject.id}_${ph.originalIdx}`;
                     const hasImageError = imageErrors[imgKey];
-                    const defaultLowerUrl = `/images/${activeProject.id}_display_${ph.originalIdx + 1}.png`;
-                    const currentImgUrl = (imageUrls[imgKey] || ph.imageUrl || defaultLowerUrl).replace(/^\/assets\//, '/images/');
+                    const defaultLowerUrl = `/images/${activeProject.id}-display-0${ph.originalIdx + 1}.png`;
+                    const currentImgUrl = imageUrls[imgKey] || ph.imageUrl || defaultLowerUrl;
                     const isCustomImageActive = !!imageUrls[imgKey] || !!ph.imageUrl;
                     const isDraggingThis = draggingDisplayIdx === ph.originalIdx;
                     

@@ -110,7 +110,7 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       glow: 'rgba(223, 155, 155, 0.15)'
     },
     bgPhoto: '/images/teajourney.jpg',
-    logoPhoto: '/images/logo_teajourney.png',
+    logoPhoto: '/images/logo-teajourney.png',
     demoUrl: 'https://your-tea-journey.vercel.app/',
     defaultGallery: [
       {
@@ -121,13 +121,13 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       },
       {
         id: 'tj-2',
-        url: '/images/walkthrough_teajourney.jpg',
+        url: '/images/walkthrough-teajourney.jpg',
         title: 'Steeping & Oxidation Flow',
         caption: 'Real-time leaf evolution and gamified steeping timers'
       },
       {
         id: 'tj-3',
-        url: '/images/columbia-wellness_display_1.png',
+        url: '/images/columbia-wellness-display-01.png',
         title: 'Tea Foam Art & Tassography',
         caption: 'Delicate pattern etching and interactive tea leaf divination'
       }
@@ -169,7 +169,7 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       glow: 'rgba(236, 203, 122, 0.15)'
     },
     bgPhoto: '/images/lumipal.jpg',
-    logoPhoto: '/images/logo_lumipal.png',
+    logoPhoto: '/images/logo-lumipal.png',
     logoScale: 'scale-[1.25]',
     demoUrl: 'https://lumi-pal.vercel.app/',
     defaultGallery: [
@@ -181,13 +181,13 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       },
       {
         id: 'lumi-2',
-        url: '/images/walkthrough_lumipal.jpg',
+        url: '/images/walkthrough-lumipal.jpg',
         title: 'Adaptive Learning Scaffolding',
         caption: 'Visual prompt overlays and companion developmental state'
       },
       {
         id: 'lumi-3',
-        url: '/images/ra-training_display_1.png',
+        url: '/images/ra-training-display-01.png',
         title: 'Educator Activity Insights',
         caption: 'Classroom monitoring dashboards and progress diagnostics'
       }
@@ -229,7 +229,7 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       glow: 'rgba(177, 154, 196, 0.15)'
     },
     bgPhoto: '/images/tarot.jpg',
-    logoPhoto: '/images/logo_tarot.png',
+    logoPhoto: '/images/logo-tarot.png',
     demoUrl: 'https://katiehong03.github.io/PositiveTarot/',
     defaultGallery: [
       {
@@ -240,13 +240,13 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       },
       {
         id: 'tarot-2',
-        url: '/images/walkthrough_tarot.jpg',
+        url: '/images/walkthrough-tarot.jpg',
         title: 'Mindful Reframing Prompts',
         caption: 'Constructive Socratic reflections and positive interpretations'
       },
       {
         id: 'tarot-3',
-        url: '/images/ra-training_display_2.png',
+        url: '/images/ra-training-display-02.png',
         title: 'Daily Reflection Journal',
         caption: 'Personal takeaway logs and saved mindfulness affirmations'
       }
@@ -288,7 +288,7 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       glow: 'rgba(123, 150, 178, 0.15)'
     },
     bgPhoto: '/images/pawgress.jpg',
-    logoPhoto: '/images/logo_pawgress.png',
+    logoPhoto: '/images/logo-pawgress.png',
     logoScale: 'scale-[2.1] translate-x-1',
     demoUrl: 'https://katiehong03.github.io/Pawgress/login.html',
     defaultGallery: [
@@ -300,13 +300,13 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       },
       {
         id: 'paw-2',
-        url: '/images/walkthrough_pawgress.jpg',
+        url: '/images/walkthrough-pawgress.jpg',
         title: 'Streak Calendar & Log',
         caption: 'Positive reinforcement routines and habit consistency visualization'
       },
       {
         id: 'paw-3',
-        url: '/images/columbia-wellness_display_2.png',
+        url: '/images/columbia-wellness-display-02.png',
         title: 'My Praises & Affirmations',
         caption: 'Warm reflections celebrating daily small wins and comforts'
       }
@@ -338,10 +338,13 @@ const getSavedProjectImages = (projectId: string, defaultImages: ShowcaseImage[]
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map((item: ShowcaseImage) => ({
-          ...item,
-          url: typeof item.url === 'string' ? item.url.replace(/^\/assets\//, '/images/') : item.url
-        }));
+        return parsed.map((item: ShowcaseImage) => {
+          if (item && item.url && item.url.startsWith('/assets/')) {
+            const filename = item.url.replace('/assets/', '').replace(/_/g, '-').toLowerCase();
+            return { ...item, url: `/images/${filename}` };
+          }
+          return item;
+        });
       }
     }
   } catch (e) {

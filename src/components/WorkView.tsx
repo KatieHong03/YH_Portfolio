@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CaseStudyView } from './CaseStudyView';
+import { AdminSyncModal } from './AdminSyncModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { compressImageFile, safeLocalStorageSet } from '../utils/imageCompressor';
 import { Project, CANONICAL_PROJECTS, getLiveProjects, saveLiveProjects, EVENT_PROJECTS_UPDATED } from '../utils/projectsData';
@@ -57,6 +58,7 @@ import {
   Upload,
   Camera,
   Trash2,
+  CloudUpload,
   Image as ImageIcon
 } from 'lucide-react';
 
@@ -265,6 +267,7 @@ export default function WorkView() {
     return localStorage.getItem('portfolio_admin_active') === 'true';
   });
 
+  const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
@@ -1623,8 +1626,8 @@ export default function WorkView() {
                           const CardComponent = isLink ? 'a' : 'div';
                           const imgKey = `${activeProject.id}_${ph.originalIdx}`;
                           const hasImageError = imageErrors[imgKey];
-                          const defaultLowerUrl = `/images/${activeProject.id}_display_${ph.originalIdx + 1}.png`;
-                          const currentImgUrl = (imageUrls[imgKey] || ph.imageUrl || defaultLowerUrl).replace(/^\/assets\//, '/images/');
+                          const defaultLowerUrl = `/images/${activeProject.id}-display-0${ph.originalIdx + 1}.png`;
+                          const currentImgUrl = imageUrls[imgKey] || ph.imageUrl || defaultLowerUrl;
                           
                           return (
                             <motion.div
@@ -1799,7 +1802,7 @@ export default function WorkView() {
                                         )}
                                         <div className="absolute bottom-2 left-2 right-2 border-t border-dashed border-brand-border/60 pt-1 text-center shrink-0 z-10 bg-white/95 backdrop-blur-3xs rounded-md shadow-3xs p-1">
                                           <span className="font-mono text-[7px] font-bold text-brand-muted/80 block">
-                                            <span className="uppercase text-brand-sage">📷 Add Pic:</span> /public/images/{activeProject.id}_display_{ph.originalIdx + 1}.png
+                                            <span className="uppercase text-brand-sage">📷 Add Pic:</span> /images/{activeProject.id}-display-0{ph.originalIdx + 1}.png
                                           </span>
                                         </div>
                                       </div>
@@ -2166,6 +2169,14 @@ export default function WorkView() {
             </span>
             <span className="text-brand-border h-4 w-px bg-brand-border/80" />
             <button 
+              onClick={() => setShowSyncModal(true)}
+              className="text-brand-sage hover:text-brand-sage/80 hover:underline transition-colors cursor-pointer flex items-center gap-1 font-sans font-semibold"
+              title="Sync & Persist to GitHub / Vercel"
+            >
+              <CloudUpload className="w-3.5 h-3.5" /> Sync to Codebase
+            </button>
+            <span className="text-brand-border h-4 w-px bg-brand-border/80" />
+            <button 
               onClick={handleResetToDefaults}
               className="text-brand-muted hover:text-[#9C5A4C] hover:underline transition-colors cursor-pointer flex items-center gap-1 font-sans"
               title="Reset all texts to default"
@@ -2190,6 +2201,12 @@ export default function WorkView() {
           </button>
         )}
       </div>
+
+      {/* Admin Persistence Migration Modal */}
+      <AdminSyncModal 
+        isOpen={showSyncModal} 
+        onClose={() => setShowSyncModal(false)} 
+      />
 
       {/* ==========================================
           PASSWORD MODAL 
@@ -2498,7 +2515,7 @@ export default function WorkView() {
                             type="text"
                             value={editCardImage}
                             onChange={(e) => setEditCardImage(e.target.value)}
-                            placeholder="e.g. /images/ra-training_cover.jpg or https://..."
+                            placeholder="e.g. /images/ra-training-cover.jpg or https://..."
                             className="w-full px-3 py-2 border border-brand-border rounded-xl focus:border-brand-sage focus:outline-none text-xs text-brand-text font-medium bg-white"
                           />
                           <p className="text-[10px] font-mono text-brand-muted/80">
@@ -2759,7 +2776,7 @@ export default function WorkView() {
                           }
                         ].map((box) => {
                           const hasImg = !!box.imageUrl && box.imageUrl.trim() !== '';
-                          const fallbackUrl = editingProject ? `/images/${editingProject.id}_display_${box.idx + 1}.png` : '';
+                          const fallbackUrl = editingProject ? `/images/${editingProject.id}-display-0${box.idx + 1}.png` : '';
                           const displaySrc = box.imageUrl || fallbackUrl;
                           
                           return (

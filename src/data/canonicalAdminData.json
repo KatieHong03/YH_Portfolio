@@ -1,0 +1,22 @@
+{
+  "updatedAt": "2026-09-15T04:57:17.408Z",
+  "version": "2.0.0",
+  "projects": [
+    {
+      "id": "ra-training",
+      "title": "PracticeURWay: A Training Website for Resident Assistants",
+      "cardImage": "/images/ra-training-cover.jpg",
+      "displayPlaceholders": [
+        {
+          "title": "Test Display",
+          "imageUrl": "/images/ra-training-display-01.png"
+        }
+      ]
+    }
+  ],
+  "playgroundProjects": {},
+  "playgroundLogos": {},
+  "playgroundGalleries": {},
+  "philosophies": [],
+  "cv": null
+}

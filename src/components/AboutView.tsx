@@ -473,7 +473,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                     className="aspect-square w-full rounded-2xl overflow-hidden border border-brand-border/60 shadow-inner bg-brand-bg relative group/photo"
                   >
                     <img 
-                      src="/images/self_photo.jpg" 
+                      src="/images/self-photo.jpg" 
                       alt="Yuting (Katie) Hong Portrait" 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover/photo:scale-105"
                       onLoad={() => setImagesLoaded(prev => ({ ...prev, self: true }))}
@@ -485,7 +485,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                     {!imagesLoaded.self && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-brand-peach/5 p-4 text-center">
                         <span className="font-mono text-[9px] uppercase tracking-wider text-brand-muted">Profile Photo</span>
-                        <span className="font-mono text-[10px] text-brand-sage font-bold mt-1">self_photo.jpg</span>
+                        <span className="font-mono text-[10px] text-brand-sage font-bold mt-1">self-photo.jpg</span>
                       </div>
                     )}
                   </div>
@@ -532,7 +532,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   >
                     <div className="aspect-square w-full bg-brand-lavender/5 relative overflow-hidden flex items-center justify-center shrink-0 border-b border-brand-border/30">
                       <img 
-                        src="/images/hobby_guitarist.jpg" 
+                        src="/images/hobby-guitarist.jpg" 
                         alt="Guitarist Hobby"
                         className="w-full h-full object-cover"
                         onLoad={() => setImagesLoaded(prev => ({ ...prev, guitarist: true }))}
@@ -544,7 +544,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                       {!imagesLoaded.guitarist && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center bg-brand-lavender/5">
                           <span className="font-mono text-[7px] uppercase tracking-wider text-brand-muted">Hobby Photo</span>
-                          <span className="font-mono text-[8px] text-brand-lavender font-bold mt-0.5">hobby_guitarist.jpg</span>
+                          <span className="font-mono text-[8px] text-brand-lavender font-bold mt-0.5">hobby-guitarist.jpg</span>
                         </div>
                       )}
                     </div>
@@ -571,7 +571,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   >
                     <div className="aspect-square w-full bg-brand-sage/5 relative overflow-hidden flex items-center justify-center shrink-0 border-b border-brand-border/30">
                       <img 
-                        src="/images/hobby_calligrapher.jpg" 
+                        src="/images/hobby-calligrapher.jpg" 
                         alt="Calligrapher Hobby"
                         className="w-full h-full object-cover"
                         onLoad={() => setImagesLoaded(prev => ({ ...prev, calligrapher: true }))}
@@ -583,7 +583,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                       {!imagesLoaded.calligrapher && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center bg-brand-sage/5">
                           <span className="font-mono text-[7px] uppercase tracking-wider text-brand-muted">Hobby Photo</span>
-                          <span className="font-mono text-[8px] text-brand-sage font-bold mt-0.5">hobby_calligrapher.jpg</span>
+                          <span className="font-mono text-[8px] text-brand-sage font-bold mt-0.5">hobby-calligrapher.jpg</span>
                         </div>
                       )}
                     </div>
@@ -610,7 +610,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   >
                     <div className="aspect-square w-full bg-brand-peach/5 relative overflow-hidden flex items-center justify-center shrink-0 border-b border-brand-border/30">
                       <img 
-                        src="/images/hobby_photographer.jpg" 
+                        src="/images/hobby-photographer.jpg" 
                         alt="Photographer Hobby"
                         className="w-full h-full object-cover"
                         onLoad={() => setImagesLoaded(prev => ({ ...prev, photographer: true }))}
@@ -622,7 +622,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                       {!imagesLoaded.photographer && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center bg-brand-peach/5">
                           <span className="font-mono text-[7px] uppercase tracking-wider text-brand-muted">Hobby Photo</span>
-                          <span className="font-mono text-[8px] text-brand-peach font-bold mt-0.5">hobby_photographer.jpg</span>
+                          <span className="font-mono text-[8px] text-brand-peach font-bold mt-0.5">hobby-photographer.jpg</span>
                         </div>
                       )}
                     </div>
@@ -649,7 +649,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   >
                     <div className="aspect-square w-full bg-brand-blue/5 relative overflow-hidden flex items-center justify-center shrink-0 border-b border-brand-border/30">
                       <img 
-                        src="/images/hobby_cosplayer.jpg" 
+                        src="/images/hobby-cosplayer.jpg" 
                         alt="Cosplayer Hobby"
                         className="w-full h-full object-cover"
                         onLoad={() => setImagesLoaded(prev => ({ ...prev, cosplayer: true }))}

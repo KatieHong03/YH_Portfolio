@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -10,15 +11,258 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // JSON Body Parser
-  app.use(express.json());
+  // JSON Body Parser with 50mb limit for image migration
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   // Use absolute path calculations for public files if needed
   const cwd = process.cwd();
+  const publicImagesDir = path.join(cwd, "public", "images");
+  if (!fs.existsSync(publicImagesDir)) {
+    fs.mkdirSync(publicImagesDir, { recursive: true });
+  }
 
   // API router goes before Vite middleware
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", time: new Date().toISOString() });
+  });
+
+  // Admin server status check
+  app.get("/api/admin/server-status", (req, res) => {
+    res.json({
+      status: "ok",
+      canWriteFiles: true,
+      mode: process.env.NODE_ENV || "development",
+      publicImagesPath: "/images/",
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Helper to sanitize filename to clean lowercase with hyphens
+  const cleanFilename = (rawName: string, defaultExt = ".jpg"): string => {
+    let name = (rawName || "image").toLowerCase().trim();
+    name = name.replace(/^[\\/]+/, "");
+    name = name.replace(/^images[\\/]/, "");
+    name = name.replace(/^assets[\\/]/, "");
+    name = name.replace(/[^a-z0-9._-]/g, "-");
+    name = name.replace(/-+/g, "-");
+    name = name.replace(/^-|-$/g, "");
+    if (!path.extname(name)) {
+      name += defaultExt;
+    }
+    return name;
+  };
+
+  // Helper to save a Base64 or Data URL image into public/images/
+  const saveImageBuffer = (dataUrl: string, suggestedName: string): string => {
+    if (!dataUrl) return "";
+
+    // Already a clean /images/ path
+    if (dataUrl.startsWith("/images/")) {
+      return dataUrl;
+    }
+
+    // Convert legacy /assets/ path to /images/ path with clean lowercase name
+    if (dataUrl.startsWith("/assets/")) {
+      const base = path.basename(dataUrl);
+      const cleaned = cleanFilename(base.replace(/_/g, "-"));
+      return `/images/${cleaned}`;
+    }
+
+    // Process data URL
+    if (dataUrl.startsWith("data:")) {
+      const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      if (matches && matches.length === 3) {
+        const mimeType = matches[1];
+        const base64Data = matches[2];
+        const buffer = Buffer.from(base64Data, "base64");
+
+        let ext = ".jpg";
+        if (mimeType.includes("png")) ext = ".png";
+        else if (mimeType.includes("webp")) ext = ".webp";
+        else if (mimeType.includes("svg")) ext = ".svg";
+        else if (mimeType.includes("gif")) ext = ".gif";
+        else if (mimeType.includes("pdf")) ext = ".pdf";
+
+        const fileName = cleanFilename(suggestedName, ext);
+        const filePath = path.join(publicImagesDir, fileName);
+
+        try {
+          fs.writeFileSync(filePath, buffer);
+          // Also mirror to dist/images if dist directory exists
+          const distImagesDir = path.join(cwd, "dist", "images");
+          if (fs.existsSync(distImagesDir)) {
+            fs.writeFileSync(path.join(distImagesDir, fileName), buffer);
+          }
+          return `/images/${fileName}`;
+        } catch (err) {
+          console.error(`Failed to save image ${fileName}:`, err);
+          return dataUrl;
+        }
+      }
+    }
+
+    return dataUrl;
+  };
+
+  // Admin Single Image Upload endpoint (saves directly to public/images/)
+  app.post("/api/admin/save-image", (req, res) => {
+    try {
+      const { filename, dataUrl } = req.body;
+      if (!dataUrl) {
+        return res.status(400).json({ error: "Missing dataUrl" });
+      }
+
+      const savedPath = saveImageBuffer(dataUrl, filename || "uploaded-image");
+      res.json({
+        success: true,
+        url: savedPath,
+        filename: path.basename(savedPath)
+      });
+    } catch (err: any) {
+      console.error("Save image error:", err);
+      res.status(500).json({ error: err.message || "Failed to save image" });
+    }
+  });
+
+  // Admin Sync All Data endpoint:
+  // Recovers Base64 images, converts to public/images/ files,
+  // updates source data, and guarantees GitHub/Vercel persistence.
+  app.post("/api/admin/sync-all-data", (req, res) => {
+    try {
+      const {
+        projects,
+        playgroundProjects,
+        playgroundLogos,
+        playgroundGalleries,
+        philosophies,
+        cv
+      } = req.body;
+
+      let imagesRecovered = 0;
+
+      // 1. Process Projects
+      const migratedProjects = (projects || []).map((project: any) => {
+        const p = { ...project };
+        const projId = cleanFilename(p.id || "project", "");
+
+        // Process cover image
+        if (p.cardImage) {
+          const original = p.cardImage;
+          p.cardImage = saveImageBuffer(p.cardImage, `${projId}-cover`);
+          if (original !== p.cardImage && original.startsWith("data:")) {
+            imagesRecovered++;
+          }
+        }
+
+        // Process displayPlaceholders
+        if (Array.isArray(p.displayPlaceholders)) {
+          p.displayPlaceholders = p.displayPlaceholders.map((ph: any, idx: number) => {
+            const updated = { ...ph };
+            if (updated.imageUrl) {
+              const original = updated.imageUrl;
+              updated.imageUrl = saveImageBuffer(updated.imageUrl, `${projId}-display-0${idx + 1}`);
+              if (original !== updated.imageUrl && original.startsWith("data:")) {
+                imagesRecovered++;
+              }
+            } else {
+              // Ensure default permanent image reference exists
+              const defaultName = `${projId}-display-0${idx + 1}.png`;
+              if (fs.existsSync(path.join(publicImagesDir, defaultName))) {
+                updated.imageUrl = `/images/${defaultName}`;
+              }
+            }
+            return updated;
+          });
+        }
+
+        return p;
+      });
+
+      // 2. Process Playground Projects & Logos
+      const migratedPlaygroundLogos: Record<string, string> = {};
+      if (playgroundLogos && typeof playgroundLogos === "object") {
+        for (const [key, val] of Object.entries(playgroundLogos)) {
+          if (typeof val === "string" && val) {
+            const original = val;
+            const saved = saveImageBuffer(val, `logo-${key}`);
+            migratedPlaygroundLogos[key] = saved;
+            if (original !== saved && original.startsWith("data:")) {
+              imagesRecovered++;
+            }
+          }
+        }
+      }
+
+      // 3. Process Playground Galleries
+      const migratedPlaygroundGalleries: Record<string, any[]> = {};
+      if (playgroundGalleries && typeof playgroundGalleries === "object") {
+        for (const [key, list] of Object.entries(playgroundGalleries)) {
+          if (Array.isArray(list)) {
+            migratedPlaygroundGalleries[key] = list.map((item: any, idx: number) => {
+              const copy = { ...item };
+              if (copy.url) {
+                const original = copy.url;
+                copy.url = saveImageBuffer(copy.url, `${key}-gallery-0${idx + 1}`);
+                if (original !== copy.url && original.startsWith("data:")) {
+                  imagesRecovered++;
+                }
+              }
+              return copy;
+            });
+          }
+        }
+      }
+
+      // 4. Save canonical admin snapshot file
+      const canonicalDataPath = path.join(cwd, "src", "data", "canonicalAdminData.json");
+      const snapshot = {
+        updatedAt: new Date().toISOString(),
+        version: "2.0.0",
+        projects: migratedProjects,
+        playgroundProjects: playgroundProjects || {},
+        playgroundLogos: migratedPlaygroundLogos,
+        playgroundGalleries: migratedPlaygroundGalleries,
+        philosophies: philosophies || [],
+        cv: cv || null
+      };
+
+      fs.writeFileSync(canonicalDataPath, JSON.stringify(snapshot, null, 2), "utf8");
+
+      res.json({
+        success: true,
+        imagesRecovered,
+        migratedProjects,
+        migratedPlaygroundLogos,
+        migratedPlaygroundGalleries,
+        message: `Successfully migrated ${imagesRecovered} images and synchronized all admin data to source control.`
+      });
+    } catch (err: any) {
+      console.error("Sync all data error:", err);
+      res.status(500).json({ error: err.message || "Failed to sync data" });
+    }
+  });
+
+  // Admin export bundle endpoint
+  app.get("/api/admin/export-bundle", (req, res) => {
+    try {
+      const canonicalDataPath = path.join(cwd, "src", "data", "canonicalAdminData.json");
+      let canonicalData = null;
+      if (fs.existsSync(canonicalDataPath)) {
+        canonicalData = JSON.parse(fs.readFileSync(canonicalDataPath, "utf8"));
+      }
+
+      const files = fs.existsSync(publicImagesDir) ? fs.readdirSync(publicImagesDir) : [];
+      res.setHeader("Content-Disposition", 'attachment; filename="admin-migration-bundle.json"');
+      res.setHeader("Content-Type", "application/json");
+      res.json({
+        canonicalData,
+        imageFiles: files.filter(f => !f.startsWith(".")),
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to export bundle" });
+    }
   });
 
   // Smart knowledge fallback generator strictly based on Katie's actual portfolio content

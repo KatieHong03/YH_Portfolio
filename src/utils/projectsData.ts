@@ -47,7 +47,7 @@ export const CANONICAL_PROJECTS: Project[] = [
   {
     id: 'ra-training',
     title: 'PracticeURWay: A Training Website for Resident Assistants',
-    cardImage: '/images/ra-training_cover.jpg',
+    cardImage: '/images/ra-training-cover.jpg',
     isFlagship: true,
     projectType: 'Instructional Design',
     types: ['Instructional Design', 'Prototypes'],
@@ -92,18 +92,18 @@ export const CANONICAL_PROJECTS: Project[] = [
       { value: '2.4x', label: 'Safety Confidence' }
     ],
     displayPlaceholders: [
-      { title: "Google Site Hub", description: "Centralized digital policy center & mobile toolkit for active duty RAs.", icon: "Layers", imageUrl: "/images/ra-training_display_1.png", externalUrl: "https://sites.google.com/view/practice-ur-way/ra-toolbox" },
-      { title: "Interactive Scenario Practices", description: "Scenario simulator with branching decision points & protocol guides.", icon: "Compass", imageUrl: "/images/ra-training_display_2.png", externalUrl: "https://docs.google.com/presentation/d/1Cy0W_el54MJqr-ncG5eqtOHZ8TtFPJDAXkX2TWgyLKQ/present?slide=id.g4dfce81f19_0_45" },
-      { title: "Tutorial Video", description: "Screencast walk-through detailing UI features and RA toolkit usage.", icon: "Video", imageUrl: "/images/ra-training_display_3.png", externalUrl: "https://sites.google.com/view/practice-ur-way/ra-toolbox" },
-      { title: "Guides & Checklists", description: "Centralized emergency response sheets and active checklist guides.", icon: "CheckSquare", imageUrl: "/images/ra-training_display_4.png", externalUrl: "https://sites.google.com/view/practice-ur-way/ra-toolbox" }
+      { title: "Google Site Hub", description: "Centralized digital policy center & mobile toolkit for active duty RAs.", icon: "Layers", externalUrl: "https://sites.google.com/view/practice-ur-way/ra-toolbox", imageUrl: "/images/ra-training-display-01.png" },
+      { title: "Interactive Scenario Practices", description: "Scenario simulator with branching decision points & protocol guides.", icon: "Compass", externalUrl: "https://docs.google.com/presentation/d/1Cy0W_el54MJqr-ncG5eqtOHZ8TtFPJDAXkX2TWgyLKQ/present?slide=id.g4dfce81f19_0_45", imageUrl: "/images/ra-training-display-02.png" },
+      { title: "Tutorial Video", description: "Screencast walk-through detailing UI features and RA toolkit usage.", icon: "Video", imageUrl: "/images/ra-training-display-03.png" },
+      { title: "Guides & Checklists", description: "Centralized emergency response sheets and active checklist guides.", icon: "CheckSquare", imageUrl: "/images/ra-training-display-04.png" }
     ]
   },
   {
     id: 'fsr-product-knowledge',
     title: 'The FSR Product Knowledge Pathway',
-    cardImage: '/images/fsr-product-knowledge_cover.jpg',
+    cardImage: '/images/fsr-learning-pathway-cover.jpg',
     isFlagship: true,
-    projectType: 'Instructional Design',
+    projectType: 'InstructionD Design',
     types: ['Instructional Design', 'eLearning', 'Learning & Development'],
     overview: 'A tiered blended learning pathway, interactive troubleshooting simulators, and certification system for Field Service Representatives.',
     audience: 'New and transitioning Field Service / Sales Representatives (FSRs), technical product specialists, and enterprise customer engineering teams.',
@@ -149,16 +149,16 @@ export const CANONICAL_PROJECTS: Project[] = [
       { value: '-35%', label: 'Field Escalation Drop' }
     ],
     displayPlaceholders: [
-      { title: "Pathway Curriculum Architecture", description: "Tiered learning roadmap mapping foundational specs to advanced diagnostics.", icon: "Map" },
-      { title: "Interactive Product Simulator", description: "Branching virtual troubleshooting simulator with real-time feedback.", icon: "Sliders" },
-      { title: "Diagnostic Field Job Aids", description: "Pocket-sized quick-reference decision trees and error code lookup guides.", icon: "CheckSquare" },
-      { title: "Competency & Assessment Dashboard", description: "Kirkpatrick Level 2 & 3 evaluation metrics and cohort performance tracker.", icon: "BarChart3" }
+      { title: "Pathway Curriculum Architecture", description: "Tiered learning roadmap mapping foundational specs to advanced diagnostics.", icon: "Map", imageUrl: "/images/fsr-learning-pathway-cover.jpg" },
+      { title: "Interactive Product Simulator", description: "Branching virtual troubleshooting simulator with real-time feedback.", icon: "Sliders", imageUrl: "/images/cognitive-load-cover.jpg" },
+      { title: "Diagnostic Field Job Aids", description: "Pocket-sized quick-reference decision trees and error code lookup guides.", icon: "CheckSquare", imageUrl: "/images/columbia-wellness-display-01.png" },
+      { title: "Competency & Assessment Dashboard", description: "Kirkpatrick Level 2 & 3 evaluation metrics and cohort performance tracker.", icon: "BarChart3", imageUrl: "/images/columbia-wellness-display-02.png" }
     ]
   },
   {
     id: 'columbia-wellness',
     title: 'STEM Wellness Program Design',
-    cardImage: '/images/columbia-wellness_cover.jpg',
+    cardImage: '/images/columbia-wellness-cover.jpg',
     projectType: 'Curriculum Design',
     types: ['Learning & Development', 'Program Design', 'Wellness Education'],
     overview: 'An interactive outreach and curriculum framework delivering low-barrier mental health programming and community-led workshops for Columbia Engineering students.',
@@ -203,16 +203,16 @@ export const CANONICAL_PROJECTS: Project[] = [
       { value: '100%', label: 'Program Viability' }
     ],
     displayPlaceholders: [
-      { title: "Stress Systems Map", description: "Cognitive-load modeling explaining fatigue as systemic signal blocks.", icon: "Sliders", imageUrl: "/images/columbia-wellness_display_1.png" },
-      { title: "Workshop Conversation Cards", description: "Structured discussion cards designed for student group check-ins.", icon: "BookOpen", imageUrl: "/images/columbia-wellness_display_2.png" },
-      { title: "STEM Infographic Graphics", description: "High-impact visual summaries tailored for STEM student spaces.", icon: "Image", imageUrl: "/images/columbia-wellness_display_3.png" },
-      { title: "Evaluation Performance Index", description: "Satisfaction tracker and engagement outcome metric dashboard.", icon: "BarChart3" }
+      { title: "Stress Systems Map", description: "Cognitive-load modeling explaining fatigue as systemic signal blocks.", icon: "Sliders", imageUrl: "/images/columbia-wellness-display-01.png" },
+      { title: "Workshop Conversation Cards", description: "Structured discussion cards designed for student group check-ins.", icon: "BookOpen", imageUrl: "/images/columbia-wellness-display-02.png" },
+      { title: "STEM Infographic Graphics", description: "High-impact visual summaries tailored for STEM student spaces.", icon: "Image", imageUrl: "/images/columbia-wellness-display-03.png" },
+      { title: "Evaluation Performance Index", description: "Satisfaction tracker and engagement outcome metric dashboard.", icon: "BarChart3", imageUrl: "/images/generic-placeholder.jpg" }
     ]
   },
   {
     id: 'comma-reading',
     title: 'Digital Reading Scaffolds',
-    cardImage: '/images/comma-reading_cover.jpg',
+    cardImage: '/images/comma-reading-cover.jpg',
     projectType: 'eLearning',
     types: ['Instructional Design', 'eLearning'],
     overview: 'Interactive Storyline reading overlays, audio-visual scaffolds, and phonics scaffolding engineered for ESL / ELL learners to improve vocabulary retention and reduce cognitive load.',
@@ -254,16 +254,16 @@ export const CANONICAL_PROJECTS: Project[] = [
       { value: '15+', label: 'Published Textbooks' }
     ],
     displayPlaceholders: [
-      { title: "Interactive Touch-Target Map", description: "Ergonomically spaced target maps for language learners in Figma.", icon: "Tablet" },
-      { title: "Storyline Sound Triggers", description: "Auditory phonics cues synchronized with reading overlays.", icon: "Volume2" },
-      { title: "LMS Learning Path Blueprint", description: "LMS-integrated curriculum mapping for weekly sessions.", icon: "Map" },
-      { title: "Progress Report Sheet", description: "Minimalist learner-centered reading log and dashboard templates.", icon: "CheckSquare" }
+      { title: "Interactive Touch-Target Map", description: "Ergonomically spaced target maps for language learners in Figma.", icon: "Tablet", imageUrl: "/images/comma-reading-cover.jpg" },
+      { title: "Storyline Sound Triggers", description: "Auditory phonics cues synchronized with reading overlays.", icon: "Volume2", imageUrl: "/images/generic-placeholder-kids.jpg" },
+      { title: "LMS Learning Path Blueprint", description: "LMS-integrated curriculum mapping for weekly sessions.", icon: "Map", imageUrl: "/images/columbia-wellness-display-01.png" },
+      { title: "Progress Report Sheet", description: "Minimalist learner-centered reading log and dashboard templates.", icon: "CheckSquare", imageUrl: "/images/columbia-wellness-display-02.png" }
     ]
   },
   {
     id: 'mentor-promise',
     title: 'Social-Emotional Mentoring Curriculum',
-    cardImage: '/images/mentor-promise_cover.jpg',
+    cardImage: '/images/mentor-promise-cover.jpg',
     projectType: 'L&D',
     types: ['Learning & Development', 'Research'],
     overview: 'A modern social-emotional (SEL) curriculum and interactive training guide that equips adult mentors with developmental conversation tools.',
@@ -303,10 +303,10 @@ export const CANONICAL_PROJECTS: Project[] = [
       { value: 'SEL', label: 'Framework Aligned' }
     ],
     displayPlaceholders: [
-      { title: "Competency Mapping", description: "Social-emotional competence mappings for drawing exercises.", icon: "GitMerge" },
-      { title: "Adolescent Workbook Layouts", description: "High-engagement print sheets styled in Adobe InDesign.", icon: "PenTool" },
-      { title: "Mentor Dialogue Pocket Cards", description: "Pocket guides with conversational coaching triggers.", icon: "HelpCircle" },
-      { title: "Relational Evaluation Panel", description: "Self-efficacy trackers assessing student safety metrics.", icon: "Heart" }
+      { title: "Competency Mapping", description: "Social-emotional competence mappings for drawing exercises.", icon: "GitMerge", imageUrl: "/images/mentor-promise-cover.jpg" },
+      { title: "Adolescent Workbook Layouts", description: "High-engagement print sheets styled in Adobe InDesign.", icon: "PenTool", imageUrl: "/images/generic-placeholder.jpg" },
+      { title: "Mentor Dialogue Pocket Cards", description: "Pocket guides with conversational coaching triggers.", icon: "HelpCircle", imageUrl: "/images/columbia-wellness-display-03.png" },
+      { title: "Relational Evaluation Panel", description: "Self-efficacy trackers assessing student safety metrics.", icon: "Heart", imageUrl: "/images/generic-placeholder-kids.jpg" }
     ]
   }
 ];
@@ -315,26 +315,21 @@ export const STORAGE_KEY_PROJECTS = 'portfolio_projects_data';
 export const EVENT_PROJECTS_UPDATED = 'portfolio_projects_data_updated';
 
 /**
- * Loads all live projects.
- * CANONICAL_PROJECTS is the single authoritative source of truth for all static portfolio items.
- * Static source-controlled images (/images/*) are strictly deterministic and are NEVER
- * silently masked or overridden by browser-local storage (localStorage, blobs, or Base64).
+ * Helper to normalize image URLs so legacy /assets/ paths map to clean /images/ paths
+ */
+function normalizeImageUrl(url?: string): string | undefined {
+  if (!url) return url;
+  if (url.startsWith('/assets/')) {
+    const filename = url.replace('/assets/', '').replace(/_/g, '-').toLowerCase();
+    return `/images/${filename}`;
+  }
+  return url;
+}
+
+/**
+ * Loads all live projects, seamlessly merging default CANONICAL_PROJECTS with any user customizations saved in localStorage.
  */
 export function getLiveProjects(): Project[] {
-  // If not in a browser environment, immediately return canonical source-controlled data
-  if (typeof window === 'undefined') {
-    return CANONICAL_PROJECTS;
-  }
-
-  // Check if Admin Mode is explicitly active in this browser session
-  const isAdminActive = localStorage.getItem('portfolio_admin_active') === 'true';
-
-  // For public visitors (and default state matching GitHub & Vercel), CANONICAL_PROJECTS is authoritative.
-  if (!isAdminActive) {
-    return CANONICAL_PROJECTS;
-  }
-
-  // If Admin Mode is active, allow text drafts, but enforce canonical static images
   const saved = localStorage.getItem(STORAGE_KEY_PROJECTS);
   if (saved) {
     try {
@@ -343,28 +338,36 @@ export function getLiveProjects(): Project[] {
         return CANONICAL_PROJECTS.map((defaultProj) => {
           const savedProj = parsed.find((p) => p.id === defaultProj.id);
           if (savedProj) {
-            // Keep canonical display images deterministic
             const updatedPlaceholders = defaultProj.displayPlaceholders.map((dpPh, idx) => {
               const savedPh = savedProj.displayPlaceholders?.[idx];
-              if (!savedPh) return dpPh;
-              return {
-                ...dpPh,
-                title: savedPh.title || dpPh.title,
-                description: savedPh.description || dpPh.description,
-                icon: savedPh.icon || dpPh.icon,
-                externalUrl: savedPh.externalUrl !== undefined ? savedPh.externalUrl : dpPh.externalUrl,
-                // Canonical imageUrl is authoritative
-                imageUrl: dpPh.imageUrl || (savedPh.imageUrl && !savedPh.imageUrl.startsWith('data:') && !savedPh.imageUrl.startsWith('blob:') ? savedPh.imageUrl : undefined)
-              };
+              const merged = savedPh ? { ...dpPh, ...savedPh } : dpPh;
+              if (merged.imageUrl) {
+                merged.imageUrl = normalizeImageUrl(merged.imageUrl);
+              }
+              return merged;
             });
+
+            // Ensure impact reflects canonical defaults: only comma-reading has wording underneath
+            let resolvedImpact = defaultProj.impact;
+            if (defaultProj.impact === '') {
+              resolvedImpact = '';
+            } else if (defaultProj.id === 'comma-reading') {
+              resolvedImpact = defaultProj.impact;
+            } else if (savedProj.impact !== undefined) {
+              resolvedImpact = savedProj.impact;
+            }
+
+            const cardImage = normalizeImageUrl(savedProj.cardImage) !== undefined 
+              ? normalizeImageUrl(savedProj.cardImage) 
+              : defaultProj.cardImage;
 
             return {
               ...defaultProj,
-              // Never let local storage overwrite static canonical cardImage
-              cardImage: defaultProj.cardImage,
-              isFlagship: defaultProj.isFlagship,
+              ...savedProj,
+              cardImage,
+              isFlagship: defaultProj.isFlagship !== undefined ? defaultProj.isFlagship : savedProj.isFlagship,
               title: savedProj.title || defaultProj.title,
-              impact: defaultProj.impact,
+              impact: resolvedImpact,
               outcomeMetric: savedProj.outcomeMetric || defaultProj.outcomeMetric,
               process: savedProj.process ? { ...defaultProj.process, ...savedProj.process } : defaultProj.process,
               deliverables: savedProj.deliverables || defaultProj.deliverables,
@@ -377,10 +380,9 @@ export function getLiveProjects(): Project[] {
         });
       }
     } catch (e) {
-      console.error('Error reading admin drafts from localStorage:', e);
+      console.error('Error parsing projects from localStorage:', e);
     }
   }
-
   return CANONICAL_PROJECTS;
 }
 
