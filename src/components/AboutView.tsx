@@ -473,7 +473,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                     className="aspect-square w-full rounded-2xl overflow-hidden border border-brand-border/60 shadow-inner bg-brand-bg relative group/photo"
                   >
                     <img 
-                      src="/assets/self_photo.jpg" 
+                      src="/images/self_photo.jpg" 
                       alt="Yuting (Katie) Hong Portrait" 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover/photo:scale-105"
                       onLoad={() => setImagesLoaded(prev => ({ ...prev, self: true }))}
@@ -532,7 +532,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   >
                     <div className="aspect-square w-full bg-brand-lavender/5 relative overflow-hidden flex items-center justify-center shrink-0 border-b border-brand-border/30">
                       <img 
-                        src="/assets/hobby_guitarist.jpg" 
+                        src="/images/hobby_guitarist.jpg" 
                         alt="Guitarist Hobby"
                         className="w-full h-full object-cover"
                         onLoad={() => setImagesLoaded(prev => ({ ...prev, guitarist: true }))}
@@ -571,7 +571,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   >
                     <div className="aspect-square w-full bg-brand-sage/5 relative overflow-hidden flex items-center justify-center shrink-0 border-b border-brand-border/30">
                       <img 
-                        src="/assets/hobby_calligrapher.jpg" 
+                        src="/images/hobby_calligrapher.jpg" 
                         alt="Calligrapher Hobby"
                         className="w-full h-full object-cover"
                         onLoad={() => setImagesLoaded(prev => ({ ...prev, calligrapher: true }))}
@@ -610,7 +610,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   >
                     <div className="aspect-square w-full bg-brand-peach/5 relative overflow-hidden flex items-center justify-center shrink-0 border-b border-brand-border/30">
                       <img 
-                        src="/assets/hobby_photographer.jpg" 
+                        src="/images/hobby_photographer.jpg" 
                         alt="Photographer Hobby"
                         className="w-full h-full object-cover"
                         onLoad={() => setImagesLoaded(prev => ({ ...prev, photographer: true }))}
@@ -649,7 +649,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   >
                     <div className="aspect-square w-full bg-brand-blue/5 relative overflow-hidden flex items-center justify-center shrink-0 border-b border-brand-border/30">
                       <img 
-                        src="/assets/hobby_cosplayer.jpg" 
+                        src="/images/hobby_cosplayer.jpg" 
                         alt="Cosplayer Hobby"
                         className="w-full h-full object-cover"
                         onLoad={() => setImagesLoaded(prev => ({ ...prev, cosplayer: true }))}

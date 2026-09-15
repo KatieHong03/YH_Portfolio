@@ -109,25 +109,25 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       text: 'text-brand-peach',
       glow: 'rgba(223, 155, 155, 0.15)'
     },
-    bgPhoto: '/assets/teajourney.jpg',
-    logoPhoto: '/assets/logo_teajourney.png',
+    bgPhoto: '/images/teajourney.jpg',
+    logoPhoto: '/images/logo_teajourney.png',
     demoUrl: 'https://your-tea-journey.vercel.app/',
     defaultGallery: [
       {
         id: 'tj-1',
-        url: '/assets/teajourney.jpg',
+        url: '/images/teajourney.jpg',
         title: 'Sensory Brewing Canvas',
         caption: 'Tactile water temperature, ratio controls, and vessel selection'
       },
       {
         id: 'tj-2',
-        url: '/assets/walkthrough_teajourney.jpg',
+        url: '/images/walkthrough_teajourney.jpg',
         title: 'Steeping & Oxidation Flow',
         caption: 'Real-time leaf evolution and gamified steeping timers'
       },
       {
         id: 'tj-3',
-        url: '/assets/columbia-wellness_display_1.png',
+        url: '/images/columbia-wellness_display_1.png',
         title: 'Tea Foam Art & Tassography',
         caption: 'Delicate pattern etching and interactive tea leaf divination'
       }
@@ -168,26 +168,26 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       text: 'text-brand-peach',
       glow: 'rgba(236, 203, 122, 0.15)'
     },
-    bgPhoto: '/assets/lumipal.jpg',
-    logoPhoto: '/assets/logo_lumipal.png',
+    bgPhoto: '/images/lumipal.jpg',
+    logoPhoto: '/images/logo_lumipal.png',
     logoScale: 'scale-[1.25]',
     demoUrl: 'https://lumi-pal.vercel.app/',
     defaultGallery: [
       {
         id: 'lumi-1',
-        url: '/assets/lumipal.jpg',
+        url: '/images/lumipal.jpg',
         title: 'Spatial Discovery Interface',
         caption: 'AR spatial detection and contextual guidance checkpoints'
       },
       {
         id: 'lumi-2',
-        url: '/assets/walkthrough_lumipal.jpg',
+        url: '/images/walkthrough_lumipal.jpg',
         title: 'Adaptive Learning Scaffolding',
         caption: 'Visual prompt overlays and companion developmental state'
       },
       {
         id: 'lumi-3',
-        url: '/assets/ra-training_display_1.png',
+        url: '/images/ra-training_display_1.png',
         title: 'Educator Activity Insights',
         caption: 'Classroom monitoring dashboards and progress diagnostics'
       }
@@ -228,25 +228,25 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       text: 'text-brand-lavender',
       glow: 'rgba(177, 154, 196, 0.15)'
     },
-    bgPhoto: '/assets/tarot.jpg',
-    logoPhoto: '/assets/logo_tarot.png',
+    bgPhoto: '/images/tarot.jpg',
+    logoPhoto: '/images/logo_tarot.png',
     demoUrl: 'https://katiehong03.github.io/PositiveTarot/',
     defaultGallery: [
       {
         id: 'tarot-1',
-        url: '/assets/tarot.jpg',
+        url: '/images/tarot.jpg',
         title: 'Tactile Card Reveal',
         caption: 'Dynamic 3D shuffle physics and intuitive touch interactions'
       },
       {
         id: 'tarot-2',
-        url: '/assets/walkthrough_tarot.jpg',
+        url: '/images/walkthrough_tarot.jpg',
         title: 'Mindful Reframing Prompts',
         caption: 'Constructive Socratic reflections and positive interpretations'
       },
       {
         id: 'tarot-3',
-        url: '/assets/ra-training_display_2.png',
+        url: '/images/ra-training_display_2.png',
         title: 'Daily Reflection Journal',
         caption: 'Personal takeaway logs and saved mindfulness affirmations'
       }
@@ -287,26 +287,26 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
       text: 'text-brand-blue',
       glow: 'rgba(123, 150, 178, 0.15)'
     },
-    bgPhoto: '/assets/pawgress.jpg',
-    logoPhoto: '/assets/logo_pawgress.png',
+    bgPhoto: '/images/pawgress.jpg',
+    logoPhoto: '/images/logo_pawgress.png',
     logoScale: 'scale-[2.1] translate-x-1',
     demoUrl: 'https://katiehong03.github.io/Pawgress/login.html',
     defaultGallery: [
       {
         id: 'paw-1',
-        url: '/assets/pawgress.jpg',
+        url: '/images/pawgress.jpg',
         title: 'Low-Friction Done List',
         caption: 'Stress-free task recognition and gentle pet interactions'
       },
       {
         id: 'paw-2',
-        url: '/assets/walkthrough_pawgress.jpg',
+        url: '/images/walkthrough_pawgress.jpg',
         title: 'Streak Calendar & Log',
         caption: 'Positive reinforcement routines and habit consistency visualization'
       },
       {
         id: 'paw-3',
-        url: '/assets/columbia-wellness_display_2.png',
+        url: '/images/columbia-wellness_display_2.png',
         title: 'My Praises & Affirmations',
         caption: 'Warm reflections celebrating daily small wins and comforts'
       }
@@ -338,7 +338,10 @@ const getSavedProjectImages = (projectId: string, defaultImages: ShowcaseImage[]
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map((item: ShowcaseImage) => ({
+          ...item,
+          url: typeof item.url === 'string' ? item.url.replace(/^\/assets\//, '/images/') : item.url
+        }));
       }
     }
   } catch (e) {

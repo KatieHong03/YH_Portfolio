@@ -492,13 +492,13 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
               <div className="mt-3 p-4 rounded-2xl bg-white border border-brand-sage/40 shadow-lg animate-fadeIn flex flex-col sm:flex-row gap-2.5 items-center">
                 <div className="flex-1 w-full">
                   <label className="block text-[10px] font-mono uppercase tracking-wider text-brand-muted font-bold mb-1">
-                    Image File URL or Relative Path (e.g. /assets/cover.jpg or https://...)
+                    Image File URL or Relative Path (e.g. /images/cover.jpg or https://...)
                   </label>
                   <input
                     type="text"
                     value={customCoverUrlInput}
                     onChange={(e) => setCustomCoverUrlInput(e.target.value)}
-                    placeholder="https://... or /assets/..."
+                    placeholder="https://... or /images/..."
                     className="w-full px-3 py-1.5 text-xs rounded-xl border border-brand-border focus:border-brand-sage focus:outline-none bg-[#FAF8F5]"
                   />
                 </div>
@@ -628,8 +628,8 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                     const isLink = !!ph.externalUrl;
                     const imgKey = `${activeProject.id}_${ph.originalIdx}`;
                     const hasImageError = imageErrors[imgKey];
-                    const defaultLowerUrl = `/assets/${activeProject.id}_display_${ph.originalIdx + 1}.png`;
-                    const currentImgUrl = imageUrls[imgKey] || ph.imageUrl || defaultLowerUrl;
+                    const defaultLowerUrl = `/images/${activeProject.id}_display_${ph.originalIdx + 1}.png`;
+                    const currentImgUrl = (imageUrls[imgKey] || ph.imageUrl || defaultLowerUrl).replace(/^\/assets\//, '/images/');
                     const isCustomImageActive = !!imageUrls[imgKey] || !!ph.imageUrl;
                     const isDraggingThis = draggingDisplayIdx === ph.originalIdx;
                     
@@ -724,7 +724,7 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                                   className="w-full h-full object-cover transition-transform duration-500 group-hover/displayimg:scale-105"
                                   referrerPolicy="no-referrer"
                                   onError={() => {
-                                    const uppercaseUrl = `/assets/${activeProject.id.toUpperCase()}_DISPLAY_${ph.originalIdx + 1}.png`;
+                                    const uppercaseUrl = `/images/${activeProject.id.toUpperCase()}_DISPLAY_${ph.originalIdx + 1}.png`;
                                     if (currentImgUrl === defaultLowerUrl) {
                                       setImageUrls(prev => ({ ...prev, [imgKey]: uppercaseUrl }));
                                     } else {
@@ -964,7 +964,7 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                                     type="text"
                                     value={customDisplayUrlInput}
                                     onChange={(e) => setCustomDisplayUrlInput(e.target.value)}
-                                    placeholder="https://... or /assets/..."
+                                    placeholder="https://... or /images/..."
                                     className="w-full px-2.5 py-1 text-xs rounded-lg border border-brand-border focus:border-brand-sage focus:outline-none bg-[#FAF8F5]"
                                   />
                                 </div>

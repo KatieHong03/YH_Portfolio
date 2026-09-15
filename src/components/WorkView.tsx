@@ -1623,8 +1623,8 @@ export default function WorkView() {
                           const CardComponent = isLink ? 'a' : 'div';
                           const imgKey = `${activeProject.id}_${ph.originalIdx}`;
                           const hasImageError = imageErrors[imgKey];
-                          const defaultLowerUrl = `/assets/${activeProject.id}_display_${ph.originalIdx + 1}.png`;
-                          const currentImgUrl = imageUrls[imgKey] || ph.imageUrl || defaultLowerUrl;
+                          const defaultLowerUrl = `/images/${activeProject.id}_display_${ph.originalIdx + 1}.png`;
+                          const currentImgUrl = (imageUrls[imgKey] || ph.imageUrl || defaultLowerUrl).replace(/^\/assets\//, '/images/');
                           
                           return (
                             <motion.div
@@ -1663,7 +1663,7 @@ export default function WorkView() {
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover/ph:scale-[1.03]"
                                         referrerPolicy="no-referrer"
                                         onError={() => {
-                                          const uppercaseUrl = `/assets/${activeProject.id.toUpperCase()}_DISPLAY_${ph.originalIdx + 1}.png`;
+                                          const uppercaseUrl = `/images/${activeProject.id.toUpperCase()}_DISPLAY_${ph.originalIdx + 1}.png`;
                                           if (currentImgUrl === defaultLowerUrl) {
                                             setImageUrls(prev => ({ ...prev, [imgKey]: uppercaseUrl }));
                                           } else {
@@ -1804,7 +1804,7 @@ export default function WorkView() {
                                         )}
                                         <div className="absolute bottom-2 left-2 right-2 border-t border-dashed border-brand-border/60 pt-1 text-center shrink-0 z-10 bg-white/95 backdrop-blur-3xs rounded-md shadow-3xs p-1">
                                           <span className="font-mono text-[7px] font-bold text-brand-muted/80 block">
-                                            <span className="uppercase text-brand-sage">📷 Add Pic:</span> /public/assets/{activeProject.id}_display_{ph.originalIdx + 1}.png
+                                            <span className="uppercase text-brand-sage">📷 Add Pic:</span> /public/images/{activeProject.id}_display_{ph.originalIdx + 1}.png
                                           </span>
                                         </div>
                                       </div>
@@ -2503,7 +2503,7 @@ export default function WorkView() {
                             type="text"
                             value={editCardImage}
                             onChange={(e) => setEditCardImage(e.target.value)}
-                            placeholder="e.g. /assets/ra-training_cover.jpg or https://..."
+                            placeholder="e.g. /images/ra-training_cover.jpg or https://..."
                             className="w-full px-3 py-2 border border-brand-border rounded-xl focus:border-brand-sage focus:outline-none text-xs text-brand-text font-medium bg-white"
                           />
                           <p className="text-[10px] font-mono text-brand-muted/80">
@@ -2764,7 +2764,7 @@ export default function WorkView() {
                           }
                         ].map((box) => {
                           const hasImg = !!box.imageUrl && box.imageUrl.trim() !== '';
-                          const fallbackUrl = editingProject ? `/assets/${editingProject.id}_display_${box.idx + 1}.png` : '';
+                          const fallbackUrl = editingProject ? `/images/${editingProject.id}_display_${box.idx + 1}.png` : '';
                           const displaySrc = box.imageUrl || fallbackUrl;
                           
                           return (

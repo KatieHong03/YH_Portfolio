@@ -47,7 +47,7 @@ export const CANONICAL_PROJECTS: Project[] = [
   {
     id: 'ra-training',
     title: 'PracticeURWay: A Training Website for Resident Assistants',
-    cardImage: '/assets/ra-training_cover.jpg',
+    cardImage: '/images/ra-training_cover.jpg',
     isFlagship: true,
     projectType: 'Instructional Design',
     types: ['Instructional Design', 'Prototypes'],
@@ -94,14 +94,14 @@ export const CANONICAL_PROJECTS: Project[] = [
     displayPlaceholders: [
       { title: "Google Site Hub", description: "Centralized digital policy center & mobile toolkit for active duty RAs.", icon: "Layers", externalUrl: "https://sites.google.com/view/practice-ur-way/ra-toolbox" },
       { title: "Interactive Scenario Practices", description: "Scenario simulator with branching decision points & protocol guides.", icon: "Compass", externalUrl: "https://docs.google.com/presentation/d/1Cy0W_el54MJqr-ncG5eqtOHZ8TtFPJDAXkX2TWgyLKQ/present?slide=id.g4dfce81f19_0_45" },
-      { title: "Tutorial Video", description: "Screencast walk-through detailing UI features and RA toolkit usage.", icon: "Video", externalUrl: "/assets/tutorial_video.mp4" },
-      { title: "Guides & Checklists", description: "Centralized emergency response sheets and active checklist guides.", icon: "CheckSquare", externalUrl: "/assets/guide_and_checklist.pdf" }
+      { title: "Tutorial Video", description: "Screencast walk-through detailing UI features and RA toolkit usage.", icon: "Video", externalUrl: "/images/tutorial_video.mp4" },
+      { title: "Guides & Checklists", description: "Centralized emergency response sheets and active checklist guides.", icon: "CheckSquare", externalUrl: "/images/guide_and_checklist.pdf" }
     ]
   },
   {
     id: 'fsr-product-knowledge',
     title: 'The FSR Product Knowledge Pathway',
-    cardImage: '/assets/fsr-product-knowledge_cover.jpg',
+    cardImage: '/images/fsr-product-knowledge_cover.jpg',
     isFlagship: true,
     projectType: 'InstructionD Design',
     types: ['Instructional Design', 'eLearning', 'Learning & Development'],
@@ -158,7 +158,7 @@ export const CANONICAL_PROJECTS: Project[] = [
   {
     id: 'columbia-wellness',
     title: 'STEM Wellness Program Design',
-    cardImage: '/assets/columbia-wellness_cover.jpg',
+    cardImage: '/images/columbia-wellness_cover.jpg',
     projectType: 'Curriculum Design',
     types: ['Learning & Development', 'Program Design', 'Wellness Education'],
     overview: 'An interactive outreach and curriculum framework delivering low-barrier mental health programming and community-led workshops for Columbia Engineering students.',
@@ -212,7 +212,7 @@ export const CANONICAL_PROJECTS: Project[] = [
   {
     id: 'comma-reading',
     title: 'Digital Reading Scaffolds',
-    cardImage: '/assets/comma-reading_cover.jpg',
+    cardImage: '/images/comma-reading_cover.jpg',
     projectType: 'eLearning',
     types: ['Instructional Design', 'eLearning'],
     overview: 'Interactive Storyline reading overlays, audio-visual scaffolds, and phonics scaffolding engineered for ESL / ELL learners to improve vocabulary retention and reduce cognitive load.',
@@ -263,7 +263,7 @@ export const CANONICAL_PROJECTS: Project[] = [
   {
     id: 'mentor-promise',
     title: 'Social-Emotional Mentoring Curriculum',
-    cardImage: '/assets/mentor-promise_cover.jpg',
+    cardImage: '/images/mentor-promise_cover.jpg',
     projectType: 'L&D',
     types: ['Learning & Development', 'Research'],
     overview: 'A modern social-emotional (SEL) curriculum and interactive training guide that equips adult mentors with developmental conversation tools.',
@@ -328,7 +328,12 @@ export function getLiveProjects(): Project[] {
           if (savedProj) {
             const updatedPlaceholders = defaultProj.displayPlaceholders.map((dpPh, idx) => {
               const savedPh = savedProj.displayPlaceholders?.[idx];
-              return savedPh ? { ...dpPh, ...savedPh } : dpPh;
+              if (!savedPh) return dpPh;
+              return {
+                ...dpPh,
+                ...savedPh,
+                imageUrl: savedPh.imageUrl ? savedPh.imageUrl.replace(/^\/assets\//, '/images/') : dpPh.imageUrl
+              };
             });
 
             // Ensure impact reflects canonical defaults: only comma-reading has wording underneath
@@ -341,10 +346,13 @@ export function getLiveProjects(): Project[] {
               resolvedImpact = savedProj.impact;
             }
 
+            const rawCardImage = savedProj.cardImage !== undefined ? savedProj.cardImage : defaultProj.cardImage;
+            const migratedCardImage = typeof rawCardImage === 'string' ? rawCardImage.replace(/^\/assets\//, '/images/') : rawCardImage;
+
             return {
               ...defaultProj,
               ...savedProj,
-              cardImage: savedProj.cardImage !== undefined ? savedProj.cardImage : defaultProj.cardImage,
+              cardImage: migratedCardImage,
               isFlagship: defaultProj.isFlagship !== undefined ? defaultProj.isFlagship : savedProj.isFlagship,
               title: savedProj.title || defaultProj.title,
               impact: resolvedImpact,
