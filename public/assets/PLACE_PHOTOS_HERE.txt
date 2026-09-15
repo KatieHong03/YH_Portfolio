@@ -1,0 +1,60 @@
+========================================================================
+🌟 YUTING (KATIE) HONG - IDEA GALAXY PHOTO ASSET DIRECTORY
+========================================================================
+
+Welcome! This folder (`/public/assets/`) is the dedicated directory for your
+portfolio assets, background images, and individual project star photos.
+
+Because this project is built with Vite, any file placed in this folder is 
+made available at the root URL path. For example, a file saved here as
+`galaxy_bg.jpg` can be referenced as `/assets/galaxy_bg.jpg` in your code.
+
+
+------------------------------------------------------------------------
+📸 ASSET FILE NAMING CONVENTIONS
+------------------------------------------------------------------------
+
+To make your photos automatically appear inside the Idea Galaxy Arena 
+without changing any code, please save your images with the exact file 
+names and formats listed below:
+
+1. GALAXY BACKGROUND PHOTO (Optional)
+   - Description: The background image for the interactive star canvas arena.
+   - Exact Name: galaxy_bg.jpg
+   - Code URL: /assets/galaxy_bg.jpg
+   - Note: If uploaded, the code will dynamically replace the default soft 
+           Morandi gradient with this background photo.
+
+2. STAR 01: Pawgress
+   - Description: Custom star image for "Pawgress".
+   - Exact Name: pawgress.jpg
+   - Code URL: /assets/pawgress.jpg
+
+3. STAR 02: Lumipal
+   - Description: Custom star image for "Lumipal".
+   - Exact Name: lumipal.jpg
+   - Code URL: /assets/lumipal.jpg
+
+4. STAR 03: Tarot
+   - Description: Custom star image for "Tarot".
+   - Exact Name: tarot.jpg
+   - Code URL: /assets/tarot.jpg
+
+5. STAR 04: Teajourney
+   - Description: Custom star image for "Teajourney".
+   - Exact Name: teajourney.jpg
+   - Code URL: /assets/teajourney.jpg
+
+
+------------------------------------------------------------------------
+🛠 HOW TO UPLOAD YOUR ASSETS
+------------------------------------------------------------------------
+You can upload files directly through your file explorer inside the 
+AI Studio code editor:
+1. Locate the `public` folder at the root directory.
+2. Expand it to find the `assets` folder.
+3. Right-click or drag-and-drop your image files directly into this `assets` 
+   folder, naming them exactly as shown above.
+
+Your images will automatically load and style beautiful round stars and
+constellation points immediately on the next refresh!
