@@ -117,22 +117,34 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
     demoUrl: 'https://your-tea-journey.vercel.app/',
     defaultGallery: [
       {
-        id: 'tj-1',
-        url: '/images/teajourney.jpg',
-        title: 'Sensory Brewing Canvas',
-        caption: 'Tactile water temperature, ratio controls, and vessel selection'
-      },
-      {
         id: 'tj-2',
         url: '/images/walkthrough-teajourney.jpg',
-        title: 'Steeping & Oxidation Flow',
-        caption: 'Real-time leaf evolution and gamified steeping timers'
+        title: 'Overview',
+        caption: ''
       },
       {
-        id: 'tj-3',
-        url: '/images/columbia-wellness-display-01.png',
-        title: 'Tea Foam Art & Tassography',
-        caption: 'Delicate pattern etching and interactive tea leaf divination'
+        id: 'custom-1787455048410',
+        url: '/images/teajourney-gallery-02.jpg',
+        title: 'Home',
+        caption: ''
+      },
+      {
+        id: 'custom-1787455066258',
+        url: '/images/teajourney-gallery-03.jpg',
+        title: 'Tasseography',
+        caption: ''
+      },
+      {
+        id: 'custom-1787455162859',
+        url: '/images/teajourney-gallery-04.jpg',
+        title: 'Tea Making',
+        caption: ''
+      },
+      {
+        id: 'custom-1787455176602',
+        url: '/images/teajourney-gallery-05.jpg',
+        title: 'History',
+        caption: ''
       }
     ],
     details: {
@@ -177,22 +189,34 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
     demoUrl: 'https://lumi-pal.vercel.app/',
     defaultGallery: [
       {
-        id: 'lumi-1',
-        url: '/images/lumipal.jpg',
-        title: 'Spatial Discovery Interface',
-        caption: 'AR spatial detection and contextual guidance checkpoints'
-      },
-      {
         id: 'lumi-2',
         url: '/images/walkthrough-lumipal.jpg',
-        title: 'Adaptive Learning Scaffolding',
-        caption: 'Visual prompt overlays and companion developmental state'
+        title: 'Overview',
+        caption: ''
       },
       {
-        id: 'lumi-3',
-        url: '/images/ra-training-display-01.png',
-        title: 'Educator Activity Insights',
-        caption: 'Classroom monitoring dashboards and progress diagnostics'
+        id: 'custom-1787455363139',
+        url: '/images/lumipal-gallery-02.jpg',
+        title: 'Landing Page',
+        caption: ''
+      },
+      {
+        id: 'custom-1787455387254',
+        url: '/images/lumipal-gallery-03.jpg',
+        title: 'Home',
+        caption: ''
+      },
+      {
+        id: 'custom-1787455394920',
+        url: '/images/lumipal-gallery-04.jpg',
+        title: 'Shop',
+        caption: ''
+      },
+      {
+        id: 'custom-1787455415602',
+        url: '/images/lumipal-gallery-05.jpg',
+        title: 'Study Mode',
+        caption: ''
       }
     ],
     details: {
@@ -236,22 +260,34 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
     demoUrl: 'https://katiehong03.github.io/PositiveTarot/',
     defaultGallery: [
       {
-        id: 'tarot-1',
-        url: '/images/tarot.jpg',
-        title: 'Tactile Card Reveal',
-        caption: 'Dynamic 3D shuffle physics and intuitive touch interactions'
-      },
-      {
         id: 'tarot-2',
         url: '/images/walkthrough-tarot.jpg',
-        title: 'Mindful Reframing Prompts',
+        title: 'Workflow',
         caption: 'Constructive Socratic reflections and positive interpretations'
       },
       {
-        id: 'tarot-3',
-        url: '/images/ra-training-display-02.png',
-        title: 'Daily Reflection Journal',
-        caption: 'Personal takeaway logs and saved mindfulness affirmations'
+        id: 'custom-1787455509025',
+        url: '/images/tarot-gallery-02.jpg',
+        title: 'Landing Page',
+        caption: ''
+      },
+      {
+        id: 'custom-1787455520871',
+        url: '/images/tarot-gallery-03.jpg',
+        title: 'About',
+        caption: ''
+      },
+      {
+        id: 'custom-1787455529075',
+        url: '/images/tarot-gallery-04.jpg',
+        title: 'Card Reveal',
+        caption: ''
+      },
+      {
+        id: 'custom-1787455538734',
+        url: '/images/tarot-gallery-05.jpg',
+        title: 'Card Drawing Session',
+        caption: ''
       }
     ],
     details: {
@@ -296,22 +332,22 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
     demoUrl: 'https://katiehong03.github.io/Pawgress/login.html',
     defaultGallery: [
       {
-        id: 'paw-1',
-        url: '/images/pawgress.jpg',
-        title: 'Low-Friction Done List',
-        caption: 'Stress-free task recognition and gentle pet interactions'
-      },
-      {
         id: 'paw-2',
         url: '/images/walkthrough-pawgress.jpg',
-        title: 'Streak Calendar & Log',
+        title: 'Workflow',
         caption: 'Positive reinforcement routines and habit consistency visualization'
       },
       {
-        id: 'paw-3',
-        url: '/images/columbia-wellness-display-02.png',
-        title: 'My Praises & Affirmations',
-        caption: 'Warm reflections celebrating daily small wins and comforts'
+        id: 'custom-1787455773260',
+        url: '/images/pawgress-gallery-02.jpg',
+        title: 'Landing',
+        caption: ''
+      },
+      {
+        id: 'custom-1787455815579',
+        url: '/images/pawgress-gallery-03.jpg',
+        title: 'Companion Selection',
+        caption: ''
       }
     ],
     details: {
@@ -336,6 +372,18 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
 
 // Helper to retrieve saved showcase images
 const getSavedProjectImages = (projectId: string, defaultImages: ShowcaseImage[]): ShowcaseImage[] => {
+  // 1. Check Supabase cached playground gallery
+  const cloudData = getCachedPlaygroundData();
+  if (cloudData && cloudData.galleries && cloudData.galleries[projectId] && Array.isArray(cloudData.galleries[projectId]) && cloudData.galleries[projectId].length > 0) {
+    return cloudData.galleries[projectId].map((item: ShowcaseImage) => {
+      if (item && item.url) {
+        return { ...item, url: normalizeImageUrl(item.url) || item.url };
+      }
+      return item;
+    });
+  }
+
+  // 2. Fall back to localStorage if available
   try {
     const saved = localStorage.getItem(`portfolio_playground_images_${projectId}`);
     if (saved) {
