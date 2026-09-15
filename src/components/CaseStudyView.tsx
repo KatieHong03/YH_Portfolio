@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { compressImageFile } from '../utils/imageCompressor';
+import { uploadMediaToCloud } from '../services/storageService';
 import { 
   User, 
   Flame, 
@@ -179,20 +180,20 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
       return;
     }
     try {
-      const compressed = await compressImageFile(file, 1400, 1000, 0.85);
+      const cloudUrl = await uploadMediaToCloud(file, `${activeProject.id}-cover`);
       if (onUpdateCoverImage) {
-        onUpdateCoverImage(compressed);
+        onUpdateCoverImage(cloudUrl);
       }
     } catch (e) {
-      console.error('Failed to compress cover image:', e);
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const result = ev.target?.result as string;
-        if (result && onUpdateCoverImage) {
-          onUpdateCoverImage(result);
+      console.warn('Direct upload failed, falling back to local compression:', e);
+      try {
+        const compressed = await compressImageFile(file, 1400, 1000, 0.85);
+        if (onUpdateCoverImage) {
+          onUpdateCoverImage(compressed);
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Failed to compress cover image:', err);
+      }
     }
   };
 
@@ -202,28 +203,26 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
       return;
     }
     try {
-      const compressed = await compressImageFile(file, 1400, 1000, 0.85);
+      const cloudUrl = await uploadMediaToCloud(file, `${activeProject.id}-display-0${placeholderIdx + 1}`);
       const imgKey = `${activeProject.id}_${placeholderIdx}`;
       setImageErrors(prev => ({ ...prev, [imgKey]: false }));
-      setImageUrls(prev => ({ ...prev, [imgKey]: compressed }));
+      setImageUrls(prev => ({ ...prev, [imgKey]: cloudUrl }));
       if (onUpdateDisplayImage) {
-        onUpdateDisplayImage(placeholderIdx, compressed);
+        onUpdateDisplayImage(placeholderIdx, cloudUrl);
       }
     } catch (e) {
-      console.error('Failed to compress display image:', e);
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const result = ev.target?.result as string;
-        if (result) {
-          const imgKey = `${activeProject.id}_${placeholderIdx}`;
-          setImageErrors(prev => ({ ...prev, [imgKey]: false }));
-          setImageUrls(prev => ({ ...prev, [imgKey]: result }));
-          if (onUpdateDisplayImage) {
-            onUpdateDisplayImage(placeholderIdx, result);
-          }
+      console.warn('Direct upload failed, falling back to local compression:', e);
+      try {
+        const compressed = await compressImageFile(file, 1400, 1000, 0.85);
+        const imgKey = `${activeProject.id}_${placeholderIdx}`;
+        setImageErrors(prev => ({ ...prev, [imgKey]: false }));
+        setImageUrls(prev => ({ ...prev, [imgKey]: compressed }));
+        if (onUpdateDisplayImage) {
+          onUpdateDisplayImage(placeholderIdx, compressed);
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Failed to compress display image:', err);
+      }
     }
   };
 
@@ -492,13 +491,13 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
               <div className="mt-3 p-4 rounded-2xl bg-white border border-brand-sage/40 shadow-lg animate-fadeIn flex flex-col sm:flex-row gap-2.5 items-center">
                 <div className="flex-1 w-full">
                   <label className="block text-[10px] font-mono uppercase tracking-wider text-brand-muted font-bold mb-1">
-                    Image File URL or Relative Path (e.g. /images/cover.jpg or https://...)
+                    Image File URL or Relative Path (e.g. /images/ra-training-cover.jpg or https://...)
                   </label>
                   <input
                     type="text"
                     value={customCoverUrlInput}
                     onChange={(e) => setCustomCoverUrlInput(e.target.value)}
-                    placeholder="https://... or /images/..."
+                    placeholder="https://... or /images/ra-training-cover.jpg"
                     className="w-full px-3 py-1.5 text-xs rounded-xl border border-brand-border focus:border-brand-sage focus:outline-none bg-[#FAF8F5]"
                   />
                 </div>
@@ -883,7 +882,7 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                                     className="absolute bottom-2 left-2 right-2 border border-dashed border-brand-border/80 hover:border-brand-sage/80 pt-1 pb-1 text-center shrink-0 z-30 pointer-events-auto bg-white/95 hover:bg-white backdrop-blur-3xs rounded-md shadow-3xs cursor-pointer transition-all flex items-center justify-center gap-1 group/addbtn"
                                   >
                                     <span className="font-mono text-[7px] font-bold text-brand-muted/80 block group-hover/addbtn:text-brand-sage">
-                                      <span className="uppercase text-brand-sage font-extrabold">📷 Click to Upload Pic:</span> {activeProject.id}_display_{ph.originalIdx + 1}.png
+                                      <span className="uppercase text-brand-sage font-extrabold">📷 Click to Upload Pic:</span> /images/{activeProject.id}-display-0{ph.originalIdx + 1}.png
                                     </span>
                                   </button>
                                 </div>
@@ -959,7 +958,7 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                                     type="text"
                                     value={customDisplayUrlInput}
                                     onChange={(e) => setCustomDisplayUrlInput(e.target.value)}
-                                    placeholder="https://... or /images/..."
+                                    placeholder="https://... or /images/ra-training-display-01.png"
                                     className="w-full px-2.5 py-1 text-xs rounded-lg border border-brand-border focus:border-brand-sage focus:outline-none bg-[#FAF8F5]"
                                   />
                                 </div>

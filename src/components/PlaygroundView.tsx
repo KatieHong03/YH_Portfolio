@@ -33,8 +33,11 @@ import {
   Save,
   Tag
 } from 'lucide-react';
-import { Project, getLiveProjects, getLiveProjectById, updateProjectCoverImage, updateProjectDisplayImage, EVENT_PROJECTS_UPDATED } from '../utils/projectsData';
+import { Project, getLiveProjects, getLiveProjectById, updateProjectCoverImage, updateProjectDisplayImage, normalizeImageUrl, EVENT_PROJECTS_UPDATED } from '../utils/projectsData';
 import { CaseStudyView } from './CaseStudyView';
+import { uploadMediaToCloud } from '../services/storageService';
+import { savePlaygroundProject, getCachedPlaygroundData } from '../services/portfolioService';
+import { subscribeToAuth } from '../services/authService';
 import { TarotDemo } from './demos/TarotDemo';
 import { ScenarioBuilderDemo } from './demos/ScenarioBuilderDemo';
 import { AnalyticsDemo } from './demos/AnalyticsDemo';
@@ -339,9 +342,8 @@ const getSavedProjectImages = (projectId: string, defaultImages: ShowcaseImage[]
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed.map((item: ShowcaseImage) => {
-          if (item && item.url && item.url.startsWith('/assets/')) {
-            const filename = item.url.replace('/assets/', '').replace(/_/g, '-').toLowerCase();
-            return { ...item, url: `/images/${filename}` };
+          if (item && item.url) {
+            return { ...item, url: normalizeImageUrl(item.url) || item.url };
           }
           return item;
         });
@@ -551,10 +553,15 @@ export default function PlaygroundView() {
   // Logo Customization State (Admin Mode)
   const [customLogos, setCustomLogos] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {};
+    const cached = getCachedPlaygroundData();
     PLAYGROUND_PROJECTS.forEach(p => {
-      const saved = localStorage.getItem(`portfolio_playground_logo_${p.id}`);
-      if (saved) {
-        map[p.id] = saved;
+      if (cached[p.id]?.logo_url) {
+        map[p.id] = cached[p.id].logo_url!;
+      } else {
+        const saved = localStorage.getItem(`portfolio_playground_logo_${p.id}`);
+        if (saved) {
+          map[p.id] = saved;
+        }
       }
     });
     return map;
@@ -565,13 +572,25 @@ export default function PlaygroundView() {
   // Project Content & Tags Customization State (Admin Mode)
   const [customProjectData, setCustomProjectData] = useState<Record<string, Partial<SandboxProject>>>(() => {
     const map: Record<string, Partial<SandboxProject>> = {};
+    const cached = getCachedPlaygroundData();
     PLAYGROUND_PROJECTS.forEach(p => {
-      const saved = localStorage.getItem(`portfolio_playground_project_data_${p.id}`);
-      if (saved) {
-        try {
-          map[p.id] = JSON.parse(saved);
-        } catch (e) {
-          console.error('Failed to parse saved project data', e);
+      if (cached[p.id]) {
+        const c = cached[p.id];
+        map[p.id] = {
+          title: c.title,
+          tagline: c.subtitle,
+          overview: c.overview,
+          skills: c.tags,
+          demoUrl: c.demo_url
+        };
+      } else {
+        const saved = localStorage.getItem(`portfolio_playground_project_data_${p.id}`);
+        if (saved) {
+          try {
+            map[p.id] = JSON.parse(saved);
+          } catch (e) {
+            console.error('Failed to parse saved project data', e);
+          }
         }
       }
     });
@@ -672,11 +691,17 @@ export default function PlaygroundView() {
 
   // Sync admin state
   useEffect(() => {
+    const unsub = subscribeToAuth((st) => {
+      setIsAdminMode(st.isAuthenticated);
+    });
     const checkAdmin = () => {
       setIsAdminMode(localStorage.getItem('portfolio_admin_active') === 'true');
     };
     window.addEventListener('storage', checkAdmin);
-    return () => window.removeEventListener('storage', checkAdmin);
+    return () => {
+      unsub();
+      window.removeEventListener('storage', checkAdmin);
+    };
   }, []);
 
   // Track active project as user scrolls
@@ -823,6 +848,7 @@ export default function PlaygroundView() {
     };
 
     setCustomProjectData(prev => ({ ...prev, [projectId]: updatedData }));
+    savePlaygroundProject(projectId, updatedData).catch(err => console.warn('Cloud save project data:', err));
     localStorage.setItem(`portfolio_playground_project_data_${projectId}`, JSON.stringify(updatedData));
     
     const baseProj = PLAYGROUND_PROJECTS.find(p => p.id === projectId);
@@ -907,11 +933,17 @@ export default function PlaygroundView() {
       return;
     }
     try {
-      const compressed = await compressImageFile(file, 600, 600, 0.9);
-      localStorage.setItem(`portfolio_playground_logo_${projectId}`, compressed);
-      setCustomLogos(prev => ({ ...prev, [projectId]: compressed }));
+      let finalUrl = '';
+      try {
+        finalUrl = await uploadMediaToCloud(file, `${projectId}-logo`);
+      } catch {
+        finalUrl = await compressImageFile(file, 600, 600, 0.9);
+      }
+      savePlaygroundProject(projectId, { logo_url: finalUrl }).catch(err => console.warn('Cloud save logo:', err));
+      localStorage.setItem(`portfolio_playground_logo_${projectId}`, finalUrl);
+      setCustomLogos(prev => ({ ...prev, [projectId]: finalUrl }));
       if (managingProject && managingProject.id === projectId) {
-        setTempLogoPhoto(compressed);
+        setTempLogoPhoto(finalUrl);
       }
       setFailedImages(prev => ({ ...prev, [`logo-${projectId}`]: false, [`modal-logo-${projectId}`]: false }));
     } catch (e) {
@@ -938,6 +970,11 @@ export default function PlaygroundView() {
   const handleSaveGallery = () => {
     if (!managingProject) return;
     try {
+      savePlaygroundProject(managingProject.id, {
+        showcase_images: tempGallery,
+        logo_url: tempLogoPhoto
+      }).catch(err => console.warn('Cloud save gallery:', err));
+
       localStorage.setItem(`portfolio_playground_images_${managingProject.id}`, JSON.stringify(tempGallery));
       if (tempLogoPhoto) {
         localStorage.setItem(`portfolio_playground_logo_${managingProject.id}`, tempLogoPhoto);
@@ -975,10 +1012,15 @@ export default function PlaygroundView() {
       return;
     }
     try {
-      const compressed = await compressImageFile(file, 1200, 900, 0.85);
+      let finalUrl = '';
+      try {
+        finalUrl = await uploadMediaToCloud(file, `${managingProject?.id || 'playground'}-gallery-${Date.now()}`);
+      } catch {
+        finalUrl = await compressImageFile(file, 1200, 900, 0.85);
+      }
       const newImg: ShowcaseImage = {
         id: `custom-${Date.now()}`,
-        url: compressed,
+        url: finalUrl,
         title: newImageTitle.trim() || file.name.replace(/\.[^/.]+$/, ''),
         caption: newImageCaption.trim() || undefined
       };

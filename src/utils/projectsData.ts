@@ -4,6 +4,7 @@
  */
 
 import { safeLocalStorageSet } from './imageCompressor';
+import { getCachedProjects, saveAllProjects } from '../services/portfolioService';
 
 export interface Project {
   id: string;
@@ -17,6 +18,9 @@ export interface Project {
   challenge: string;   // What learning or performance problem needed to be addressed?
   solution: string;    // What learning experience, training, or instructional solution was designed?
   externalUrl?: string; // External link for the project (optional)
+  caseStudyDocUrl?: string; // Optional external document link
+  orderIndex?: number;
+  visible?: boolean;
   process: {
     needsAnalysis: string;
     learningObjectives: string;
@@ -315,21 +319,36 @@ export const STORAGE_KEY_PROJECTS = 'portfolio_projects_data';
 export const EVENT_PROJECTS_UPDATED = 'portfolio_projects_data_updated';
 
 /**
- * Helper to normalize image URLs so legacy /assets/ paths map to clean /images/ paths
+ * Canonical image path normalizer ensuring all image references strictly follow
+ * the clean lowercase hyphenated standard in /images/
  */
-function normalizeImageUrl(url?: string): string | undefined {
+export function normalizeImageUrl(url?: string): string | undefined {
   if (!url) return url;
-  if (url.startsWith('/assets/')) {
-    const filename = url.replace('/assets/', '').replace(/_/g, '-').toLowerCase();
-    return `/images/${filename}`;
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
   }
-  return url;
+  let base = url.trim();
+  const lastSlash = base.lastIndexOf('/');
+  if (lastSlash >= 0) {
+    base = base.substring(lastSlash + 1);
+  }
+  let clean = base.replace(/_/g, '-').toLowerCase();
+  clean = clean.replace(/-display-(\d)\./, '-display-0$1.');
+  return `/images/${clean}`;
 }
 
 /**
- * Loads all live projects, seamlessly merging default CANONICAL_PROJECTS with any user customizations saved in localStorage.
+ * Loads all live projects, prioritizing the persistent cloud database if loaded,
+ * while safely checking browser localStorage for pending unmigrated edits,
+ * and falling back to CANONICAL_PROJECTS.
  */
 export function getLiveProjects(): Project[] {
+  // If cloud projects are already loaded from database and differ from default, use cloud
+  const cloudProjects = getCachedProjects();
+  if (cloudProjects && cloudProjects.length > 0 && cloudProjects !== CANONICAL_PROJECTS) {
+    return cloudProjects;
+  }
+
   const saved = localStorage.getItem(STORAGE_KEY_PROJECTS);
   if (saved) {
     try {
@@ -395,10 +414,25 @@ export function getLiveProjectById(id: string): Project | undefined {
 }
 
 /**
- * Saves projects array to localStorage and broadcasts an update event to all active views.
+ * Saves projects array to cloud database, safe local backup, and broadcasts an update event.
  */
 export function saveLiveProjects(projects: Project[]): void {
-  safeLocalStorageSet(STORAGE_KEY_PROJECTS, JSON.stringify(projects));
+  const sanitized = projects.map((p) => ({
+    ...p,
+    cardImage: p.cardImage ? normalizeImageUrl(p.cardImage) : undefined,
+    displayPlaceholders: (p.displayPlaceholders || []).map((ph) => ({
+      ...ph,
+      imageUrl: ph.imageUrl ? normalizeImageUrl(ph.imageUrl) : undefined
+    }))
+  }));
+
+  // Save to persistent cloud database
+  saveAllProjects(sanitized).catch((err) => {
+    console.warn('Cloud save projects warning:', err);
+  });
+
+  // Keep local backup in browser
+  safeLocalStorageSet(STORAGE_KEY_PROJECTS, JSON.stringify(sanitized));
   window.dispatchEvent(new Event(EVENT_PROJECTS_UPDATED));
   window.dispatchEvent(new Event('storage'));
 }
@@ -408,9 +442,10 @@ export function saveLiveProjects(projects: Project[]): void {
  */
 export function updateProjectCoverImage(projectId: string, newImage: string): Project[] {
   const current = getLiveProjects();
+  const normalized = newImage ? (normalizeImageUrl(newImage) || newImage) : '';
   const updated = current.map((p) => {
     if (p.id === projectId) {
-      return { ...p, cardImage: newImage };
+      return { ...p, cardImage: normalized };
     }
     return p;
   });
@@ -423,13 +458,14 @@ export function updateProjectCoverImage(projectId: string, newImage: string): Pr
  */
 export function updateProjectDisplayImage(projectId: string, placeholderIdx: number, newImageUrl: string): Project[] {
   const current = getLiveProjects();
+  const normalized = newImageUrl ? (normalizeImageUrl(newImageUrl) || newImageUrl) : '';
   const updated = current.map((p) => {
     if (p.id === projectId) {
       const updatedPlaceholders = [...(p.displayPlaceholders || [])];
       if (updatedPlaceholders[placeholderIdx]) {
         updatedPlaceholders[placeholderIdx] = {
           ...updatedPlaceholders[placeholderIdx],
-          imageUrl: newImageUrl
+          imageUrl: normalized
         };
       }
       return {

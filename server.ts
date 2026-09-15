@@ -42,8 +42,7 @@ async function startServer() {
   const cleanFilename = (rawName: string, defaultExt = ".jpg"): string => {
     let name = (rawName || "image").toLowerCase().trim();
     name = name.replace(/^[\\/]+/, "");
-    name = name.replace(/^images[\\/]/, "");
-    name = name.replace(/^assets[\\/]/, "");
+    name = name.replace(/^(images|assets)[\\/]/, "");
     name = name.replace(/[^a-z0-9._-]/g, "-");
     name = name.replace(/-+/g, "-");
     name = name.replace(/^-|-$/g, "");
@@ -62,8 +61,8 @@ async function startServer() {
       return dataUrl;
     }
 
-    // Convert legacy /assets/ path to /images/ path with clean lowercase name
-    if (dataUrl.startsWith("/assets/")) {
+    // Convert any relative path to canonical /images/ path with clean lowercase name
+    if (dataUrl.startsWith("/")) {
       const base = path.basename(dataUrl);
       const cleaned = cleanFilename(base.replace(/_/g, "-"));
       return `/images/${cleaned}`;

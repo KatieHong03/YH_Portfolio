@@ -8,6 +8,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Project, getLiveProjects, getLiveProjectById, updateProjectCoverImage, updateProjectDisplayImage, EVENT_PROJECTS_UPDATED } from '../utils/projectsData';
 import { CaseStudyView } from './CaseStudyView';
 import { AppLogosTicker } from './AppLogosTicker';
+import { getCachedCVContent, saveCVContent } from '../services/portfolioService';
+import { uploadMediaToCloud } from '../services/storageService';
+import { subscribeToAuth, logoutAdmin } from '../services/authService';
 import { 
   Briefcase, 
   GraduationCap, 
@@ -206,21 +209,36 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     return localStorage.getItem('portfolio_admin_active') === 'true';
   });
 
+  useEffect(() => {
+    const unsub = subscribeToAuth((st) => {
+      setIsAdminMode(st.isAuthenticated);
+    });
+    return unsub;
+  }, []);
+
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
 
   // Custom Resume PDF State
   const [customResumePdf, setCustomResumePdf] = useState<string>(() => {
+    const cached = getCachedCVContent();
+    if (cached?.resume_meta?.url) return cached.resume_meta.url;
     return localStorage.getItem('portfolio_custom_resume_pdf') || '';
   });
   const [customResumeName, setCustomResumeName] = useState<string>(() => {
+    const cached = getCachedCVContent();
+    if (cached?.resume_meta?.name) return cached.resume_meta.name;
     return localStorage.getItem('portfolio_custom_resume_name') || '';
   });
   const [customResumeDate, setCustomResumeDate] = useState<string>(() => {
+    const cached = getCachedCVContent();
+    if (cached?.resume_meta?.updatedAt) return cached.resume_meta.updatedAt;
     return localStorage.getItem('portfolio_custom_resume_date') || '';
   });
   const [customResumeSize, setCustomResumeSize] = useState<string>(() => {
+    const cached = getCachedCVContent();
+    if (cached?.resume_meta?.size) return cached.resume_meta.size;
     return localStorage.getItem('portfolio_custom_resume_size') || '';
   });
 
@@ -424,8 +442,8 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
   };
 
   const handleLogout = () => {
+    logoutAdmin();
     setIsAdminMode(false);
-    localStorage.removeItem('portfolio_admin_active');
   };
 
   const handleResetToDefaults = () => {
@@ -506,6 +524,7 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     }
 
     setEducationList(updatedList);
+    saveCVContent({ education: updatedList }).catch(err => console.warn('Cloud save education:', err));
     localStorage.setItem('portfolio_cv_education_v3', JSON.stringify(updatedList));
     setEditingEdu(null);
   };
@@ -515,6 +534,7 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     if (window.confirm('Are you sure you want to remove this academic education item?')) {
       const updatedList = educationList.filter(edu => edu.id !== id);
       setEducationList(updatedList);
+      saveCVContent({ education: updatedList }).catch(err => console.warn('Cloud save education:', err));
       localStorage.setItem('portfolio_cv_education_v3', JSON.stringify(updatedList));
     }
   };
@@ -527,6 +547,7 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     updated[index] = updated[targetIdx];
     updated[targetIdx] = item;
     setEducationList(updated);
+    saveCVContent({ education: updated }).catch(err => console.warn('Cloud save education:', err));
     localStorage.setItem('portfolio_cv_education_v3', JSON.stringify(updated));
   };
 
@@ -586,6 +607,7 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     }
 
     setExperiences(updatedList);
+    saveCVContent({ experiences: updatedList }).catch(err => console.warn('Cloud save experiences:', err));
     localStorage.setItem('portfolio_cv_experiences', JSON.stringify(updatedList));
     setEditingExp(null);
   };
@@ -595,6 +617,7 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     if (window.confirm('Are you sure you want to remove this experience role?')) {
       const updatedList = experiences.filter(exp => exp.id !== id);
       setExperiences(updatedList);
+      saveCVContent({ experiences: updatedList }).catch(err => console.warn('Cloud save experiences:', err));
       localStorage.setItem('portfolio_cv_experiences', JSON.stringify(updatedList));
     }
   };
@@ -607,6 +630,7 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     updated[index] = updated[targetIdx];
     updated[targetIdx] = item;
     setExperiences(updated);
+    saveCVContent({ experiences: updated }).catch(err => console.warn('Cloud save experiences:', err));
     localStorage.setItem('portfolio_cv_experiences', JSON.stringify(updated));
   };
 
@@ -625,6 +649,7 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     });
 
     setSkillGroups(updatedGroups);
+    saveCVContent({ skills: updatedGroups }).catch(err => console.warn('Cloud save skills:', err));
     localStorage.setItem('portfolio_cv_skills_v4', JSON.stringify(updatedGroups));
     setNewSkillInputs({ ...newSkillInputs, [groupId]: '' });
   };
@@ -638,6 +663,7 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     });
 
     setSkillGroups(updatedGroups);
+    saveCVContent({ skills: updatedGroups }).catch(err => console.warn('Cloud save skills:', err));
     localStorage.setItem('portfolio_cv_skills_v4', JSON.stringify(updatedGroups));
   };
 
@@ -662,6 +688,7 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     if (window.confirm('Are you sure you want to delete this skill group?')) {
       const updated = skillGroups.filter(g => g.id !== groupId);
       setSkillGroups(updated);
+      saveCVContent({ skills: updated }).catch(err => console.warn('Cloud save skills:', err));
       localStorage.setItem('portfolio_cv_skills_v4', JSON.stringify(updated));
     }
   };
@@ -669,11 +696,12 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
   const handleUpdateCategoryName = (groupId: string, newName: string) => {
     const updated = skillGroups.map(g => g.id === groupId ? { ...g, category: newName } : g);
     setSkillGroups(updated);
+    saveCVContent({ skills: updated }).catch(err => console.warn('Cloud save skills:', err));
     localStorage.setItem('portfolio_cv_skills_v4', JSON.stringify(updated));
   };
 
   // PDF Resume Upload & Reset Handlers
-  const handlePdfUpload = (file: File) => {
+  const handlePdfUpload = async (file: File) => {
     if (!file) return;
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
       alert('Please select a valid PDF file (.pdf)');
@@ -684,29 +712,44 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      const sizeStr = file.size > 1024 * 1024 
-        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
-        : `${Math.round(file.size / 1024)} KB`;
-      const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const sizeStr = file.size > 1024 * 1024 
+      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
+      : `${Math.round(file.size / 1024)} KB`;
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-      setCustomResumePdf(dataUrl);
-      setCustomResumeName(file.name);
-      setCustomResumeDate(dateStr);
-      setCustomResumeSize(sizeStr);
+    let finalUrl = '';
+    try {
+      finalUrl = await uploadMediaToCloud(file, `resume-${Date.now()}.pdf`, 'portfolio-media');
+    } catch {
+      finalUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.readAsDataURL(file);
+      });
+    }
 
-      localStorage.setItem('portfolio_custom_resume_pdf', dataUrl);
-      localStorage.setItem('portfolio_custom_resume_name', file.name);
-      localStorage.setItem('portfolio_custom_resume_date', dateStr);
-      localStorage.setItem('portfolio_custom_resume_size', sizeStr);
+    setCustomResumePdf(finalUrl);
+    setCustomResumeName(file.name);
+    setCustomResumeDate(dateStr);
+    setCustomResumeSize(sizeStr);
 
-      window.dispatchEvent(new Event('storage'));
-      setUploadSuccessMsg(`Resume PDF "${file.name}" successfully uploaded and activated!`);
-      setTimeout(() => setUploadSuccessMsg(''), 4000);
-    };
-    reader.readAsDataURL(file);
+    saveCVContent({
+      resumeMeta: {
+        url: finalUrl,
+        name: file.name,
+        size: sizeStr,
+        updatedAt: dateStr
+      }
+    }).catch(err => console.warn('Cloud save resume meta:', err));
+
+    localStorage.setItem('portfolio_custom_resume_pdf', finalUrl);
+    localStorage.setItem('portfolio_custom_resume_name', file.name);
+    localStorage.setItem('portfolio_custom_resume_date', dateStr);
+    localStorage.setItem('portfolio_custom_resume_size', sizeStr);
+
+    window.dispatchEvent(new Event('storage'));
+    setUploadSuccessMsg(`Resume PDF "${file.name}" successfully uploaded and activated!`);
+    setTimeout(() => setUploadSuccessMsg(''), 4000);
   };
 
   const handleResetResumePdf = () => {

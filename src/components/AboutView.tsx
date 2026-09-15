@@ -5,6 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { getCachedAboutContent, saveAboutContent } from '../services/portfolioService';
+import { subscribeToAuth } from '../services/authService';
 import { 
   ArrowRight, 
   Sparkles, 
@@ -79,8 +81,19 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
     return localStorage.getItem('portfolio_admin_active') === 'true';
   });
 
+  useEffect(() => {
+    const unsub = subscribeToAuth((st) => {
+      setIsAdminMode(st.isAuthenticated);
+    });
+    return unsub;
+  }, []);
+
   // Philosophies state
   const [philosophies, setPhilosophies] = useState<PhilosophyItem[]>(() => {
+    const cached = getCachedAboutContent();
+    if (cached?.philosophies && Array.isArray(cached.philosophies) && cached.philosophies.length > 0) {
+      return cached.philosophies;
+    }
     const saved = localStorage.getItem('portfolio_about_philosophies');
     if (saved) {
       try {
@@ -153,6 +166,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
     }
 
     setPhilosophies(updatedList);
+    saveAboutContent({ philosophies: updatedList }).catch(err => console.warn('Cloud save about:', err));
     localStorage.setItem('portfolio_about_philosophies', JSON.stringify(updatedList));
     setEditingPhil(null);
   };
@@ -162,6 +176,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
     if (window.confirm('Are you sure you want to delete this philosophy pillar?')) {
       const updatedList = philosophies.filter(p => p.id !== id);
       setPhilosophies(updatedList);
+      saveAboutContent({ philosophies: updatedList }).catch(err => console.warn('Cloud save about:', err));
       localStorage.setItem('portfolio_about_philosophies', JSON.stringify(updatedList));
     }
   };
@@ -661,7 +676,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                       {!imagesLoaded.cosplayer && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center bg-brand-blue/5">
                           <span className="font-mono text-[7px] uppercase tracking-wider text-brand-muted">Hobby Photo</span>
-                          <span className="font-mono text-[9px] text-brand-blue font-bold mt-0.5">hobby_cosplayer.jpg</span>
+                          <span className="font-mono text-[9px] text-brand-blue font-bold mt-0.5">hobby-cosplayer.jpg</span>
                         </div>
                       )}
                     </div>

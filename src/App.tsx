@@ -11,11 +11,27 @@ import PlaygroundView from './components/PlaygroundView';
 import CVView from './components/CVView';
 import ConnectModal from './components/ConnectModal';
 import PortfolioGuide from './components/PortfolioGuide';
+import { initAuthListener } from './services/authService';
+import { 
+  fetchProjects, 
+  fetchPlaygroundData, 
+  fetchAboutContent, 
+  fetchCVContent 
+} from './services/portfolioService';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('about');
   const [isConnectModalOpen, setIsConnectModalOpen] = useState<boolean>(false);
   const [isGuideOpen, setIsGuideOpen] = useState<boolean>(false);
+
+  // Initialize Auth & fetch cloud database content on mount
+  useEffect(() => {
+    initAuthListener();
+    fetchProjects().catch((e) => console.warn('Fetch projects error:', e));
+    fetchPlaygroundData().catch((e) => console.warn('Fetch playground error:', e));
+    fetchAboutContent().catch((e) => console.warn('Fetch about error:', e));
+    fetchCVContent().catch((e) => console.warn('Fetch cv error:', e));
+  }, []);
 
   // Instant scroll to top on tab change so user starts cleanly at the header
   useEffect(() => {

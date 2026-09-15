@@ -6,9 +6,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CaseStudyView } from './CaseStudyView';
 import { AdminSyncModal } from './AdminSyncModal';
+import { AdminLoginModal } from './AdminLoginModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { compressImageFile, safeLocalStorageSet } from '../utils/imageCompressor';
 import { Project, CANONICAL_PROJECTS, getLiveProjects, saveLiveProjects, EVENT_PROJECTS_UPDATED } from '../utils/projectsData';
+import { uploadMediaToCloud } from '../services/storageService';
+import { subscribeToAuth, logoutAdmin } from '../services/authService';
+import { EVENT_CLOUD_PROJECTS_UPDATED } from '../services/portfolioService';
 import { 
   BookOpen, 
   User, 
@@ -256,9 +260,11 @@ export default function WorkView() {
       setProjects(getLiveProjects());
     };
     window.addEventListener(EVENT_PROJECTS_UPDATED, handleSyncProjects);
+    window.addEventListener(EVENT_CLOUD_PROJECTS_UPDATED, handleSyncProjects);
     window.addEventListener('storage', handleSyncProjects);
     return () => {
       window.removeEventListener(EVENT_PROJECTS_UPDATED, handleSyncProjects);
+      window.removeEventListener(EVENT_CLOUD_PROJECTS_UPDATED, handleSyncProjects);
       window.removeEventListener('storage', handleSyncProjects);
     };
   }, []);
@@ -267,11 +273,15 @@ export default function WorkView() {
     return localStorage.getItem('portfolio_admin_active') === 'true';
   });
 
+  useEffect(() => {
+    const unsub = subscribeToAuth((state) => {
+      setIsAdminMode(state.isAuthenticated);
+    });
+    return unsub;
+  }, []);
+
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
-  const [passwordInput, setPasswordInput] = useState<string>('');
-  const [passwordError, setPasswordError] = useState<string>('');
-
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   // Form states
@@ -548,17 +558,16 @@ export default function WorkView() {
       return;
     }
     try {
-      // Auto compress to prevent exceeding browser localStorage quota
-      const compressed = await compressImageFile(file, 1400, 1000, 0.85);
-      handleUpdateCoverImage(projectId, compressed);
+      const cloudUrl = await uploadMediaToCloud(file, `${projectId}-cover`);
+      handleUpdateCoverImage(projectId, cloudUrl);
     } catch (e) {
-      console.error('Failed to process cover image:', e);
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const result = ev.target?.result as string;
-        if (result) handleUpdateCoverImage(projectId, result);
-      };
-      reader.readAsDataURL(file);
+      console.warn('Direct upload failed, compressing locally:', e);
+      try {
+        const compressed = await compressImageFile(file, 1400, 1000, 0.85);
+        handleUpdateCoverImage(projectId, compressed);
+      } catch (err) {
+        console.error('Failed to process cover image:', err);
+      }
     }
   };
 
@@ -596,22 +605,22 @@ export default function WorkView() {
       return;
     }
     try {
-      const compressed = await compressImageFile(file, 1400, 1000, 0.85);
-      handleUpdateDisplayImage(projectId, placeholderIdx, compressed);
+      const cloudUrl = await uploadMediaToCloud(file, `${projectId}-display-0${placeholderIdx + 1}`);
+      handleUpdateDisplayImage(projectId, placeholderIdx, cloudUrl);
     } catch (e) {
-      console.error('Failed to process display image:', e);
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const result = ev.target?.result as string;
-        if (result) handleUpdateDisplayImage(projectId, placeholderIdx, result);
-      };
-      reader.readAsDataURL(file);
+      console.warn('Direct cloud upload failed, compressing locally:', e);
+      try {
+        const compressed = await compressImageFile(file, 1400, 1000, 0.85);
+        handleUpdateDisplayImage(projectId, placeholderIdx, compressed);
+      } catch (err) {
+        console.error('Failed to process display image:', err);
+      }
     }
   };
 
   const handleLogout = () => {
+    logoutAdmin();
     setIsAdminMode(false);
-    localStorage.removeItem('portfolio_admin_active');
   };
 
   const handleResetToDefaults = () => {
@@ -2208,104 +2217,14 @@ export default function WorkView() {
         onClose={() => setShowSyncModal(false)} 
       />
 
-      {/* ==========================================
-          PASSWORD MODAL 
-          ========================================== */}
-      <AnimatePresence>
-        {showPasswordModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full border border-brand-border shadow-2xl space-y-4"
-            >
-              <div className="flex items-center justify-between border-b border-brand-border/40 pb-3">
-                <div className="flex items-center gap-2 text-brand-sage">
-                  <Lock className="w-5 h-5" />
-                  <h3 className="font-serif font-bold text-lg text-brand-text">Admin Authentication</h3>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowPasswordModal(false);
-                    setPasswordInput('');
-                    setPasswordError('');
-                  }}
-                  className="text-brand-muted hover:text-brand-text cursor-pointer p-1 rounded-full hover:bg-brand-bg transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <p className="font-sans text-xs text-brand-muted leading-relaxed">
-                  Enter the administrator password to enable live editing of the portfolio texts.
-                </p>
-                <div className="space-y-1">
-                  <label className="font-mono text-[9px] uppercase tracking-wider text-brand-muted font-bold block">
-                    Admin Password
-                  </label>
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        if (passwordInput === '030226') {
-                          setIsAdminMode(true);
-                          localStorage.setItem('portfolio_admin_active', 'true');
-                          setShowPasswordModal(false);
-                          setPasswordInput('');
-                          setPasswordError('');
-                        } else {
-                          setPasswordError('Invalid credentials.');
-                        }
-                      }
-                    }}
-                    placeholder="Enter administrator password"
-                    className="w-full px-3.5 py-2 rounded-xl border border-brand-border/80 focus:border-brand-sage focus:outline-none text-sm font-sans placeholder:text-brand-muted"
-                    autoFocus
-                  />
-                  {passwordError && (
-                    <p className="text-[#9C5A4C] text-[11px] font-medium font-sans mt-1">
-                      {passwordError}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2.5 pt-2">
-                <button
-                  onClick={() => {
-                    setShowPasswordModal(false);
-                    setPasswordInput('');
-                    setPasswordError('');
-                  }}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-brand-muted hover:bg-brand-bg transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (passwordInput === '030226') {
-                      setIsAdminMode(true);
-                      localStorage.setItem('portfolio_admin_active', 'true');
-                      setShowPasswordModal(false);
-                      setPasswordInput('');
-                      setPasswordError('');
-                    } else {
-                      setPasswordError('Invalid credentials.');
-                    }
-                  }}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-brand-sage hover:bg-brand-sage/90 transition-all shadow-xs cursor-pointer"
-                >
-                  Verify Key
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Admin Login Modal with Supabase Auth */}
+      <AdminLoginModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onLoginSuccess={() => {
+          setIsAdminMode(true);
+        }}
+      />
 
       {/* ==========================================
           STRUCTURED CONTENT EDITOR MODAL 
