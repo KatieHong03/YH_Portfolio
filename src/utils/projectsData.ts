@@ -92,10 +92,10 @@ export const CANONICAL_PROJECTS: Project[] = [
       { value: '2.4x', label: 'Safety Confidence' }
     ],
     displayPlaceholders: [
-      { title: "Google Site Hub", description: "Centralized digital policy center & mobile toolkit for active duty RAs.", icon: "Layers", externalUrl: "https://sites.google.com/view/practice-ur-way/ra-toolbox" },
-      { title: "Interactive Scenario Practices", description: "Scenario simulator with branching decision points & protocol guides.", icon: "Compass", externalUrl: "https://docs.google.com/presentation/d/1Cy0W_el54MJqr-ncG5eqtOHZ8TtFPJDAXkX2TWgyLKQ/present?slide=id.g4dfce81f19_0_45" },
-      { title: "Tutorial Video", description: "Screencast walk-through detailing UI features and RA toolkit usage.", icon: "Video", externalUrl: "/images/tutorial_video.mp4" },
-      { title: "Guides & Checklists", description: "Centralized emergency response sheets and active checklist guides.", icon: "CheckSquare", externalUrl: "/images/guide_and_checklist.pdf" }
+      { title: "Google Site Hub", description: "Centralized digital policy center & mobile toolkit for active duty RAs.", icon: "Layers", imageUrl: "/images/ra-training_display_1.png", externalUrl: "https://sites.google.com/view/practice-ur-way/ra-toolbox" },
+      { title: "Interactive Scenario Practices", description: "Scenario simulator with branching decision points & protocol guides.", icon: "Compass", imageUrl: "/images/ra-training_display_2.png", externalUrl: "https://docs.google.com/presentation/d/1Cy0W_el54MJqr-ncG5eqtOHZ8TtFPJDAXkX2TWgyLKQ/present?slide=id.g4dfce81f19_0_45" },
+      { title: "Tutorial Video", description: "Screencast walk-through detailing UI features and RA toolkit usage.", icon: "Video", imageUrl: "/images/ra-training_display_3.png", externalUrl: "https://sites.google.com/view/practice-ur-way/ra-toolbox" },
+      { title: "Guides & Checklists", description: "Centralized emergency response sheets and active checklist guides.", icon: "CheckSquare", imageUrl: "/images/ra-training_display_4.png", externalUrl: "https://sites.google.com/view/practice-ur-way/ra-toolbox" }
     ]
   },
   {
@@ -103,7 +103,7 @@ export const CANONICAL_PROJECTS: Project[] = [
     title: 'The FSR Product Knowledge Pathway',
     cardImage: '/images/fsr-product-knowledge_cover.jpg',
     isFlagship: true,
-    projectType: 'InstructionD Design',
+    projectType: 'Instructional Design',
     types: ['Instructional Design', 'eLearning', 'Learning & Development'],
     overview: 'A tiered blended learning pathway, interactive troubleshooting simulators, and certification system for Field Service Representatives.',
     audience: 'New and transitioning Field Service / Sales Representatives (FSRs), technical product specialists, and enterprise customer engineering teams.',
@@ -203,9 +203,9 @@ export const CANONICAL_PROJECTS: Project[] = [
       { value: '100%', label: 'Program Viability' }
     ],
     displayPlaceholders: [
-      { title: "Stress Systems Map", description: "Cognitive-load modeling explaining fatigue as systemic signal blocks.", icon: "Sliders" },
-      { title: "Workshop Conversation Cards", description: "Structured discussion cards designed for student group check-ins.", icon: "BookOpen" },
-      { title: "STEM Infographic Graphics", description: "High-impact visual summaries tailored for STEM student spaces.", icon: "Image" },
+      { title: "Stress Systems Map", description: "Cognitive-load modeling explaining fatigue as systemic signal blocks.", icon: "Sliders", imageUrl: "/images/columbia-wellness_display_1.png" },
+      { title: "Workshop Conversation Cards", description: "Structured discussion cards designed for student group check-ins.", icon: "BookOpen", imageUrl: "/images/columbia-wellness_display_2.png" },
+      { title: "STEM Infographic Graphics", description: "High-impact visual summaries tailored for STEM student spaces.", icon: "Image", imageUrl: "/images/columbia-wellness_display_3.png" },
       { title: "Evaluation Performance Index", description: "Satisfaction tracker and engagement outcome metric dashboard.", icon: "BarChart3" }
     ]
   },
@@ -315,9 +315,26 @@ export const STORAGE_KEY_PROJECTS = 'portfolio_projects_data';
 export const EVENT_PROJECTS_UPDATED = 'portfolio_projects_data_updated';
 
 /**
- * Loads all live projects, seamlessly merging default CANONICAL_PROJECTS with any user customizations saved in localStorage.
+ * Loads all live projects.
+ * CANONICAL_PROJECTS is the single authoritative source of truth for all static portfolio items.
+ * Static source-controlled images (/images/*) are strictly deterministic and are NEVER
+ * silently masked or overridden by browser-local storage (localStorage, blobs, or Base64).
  */
 export function getLiveProjects(): Project[] {
+  // If not in a browser environment, immediately return canonical source-controlled data
+  if (typeof window === 'undefined') {
+    return CANONICAL_PROJECTS;
+  }
+
+  // Check if Admin Mode is explicitly active in this browser session
+  const isAdminActive = localStorage.getItem('portfolio_admin_active') === 'true';
+
+  // For public visitors (and default state matching GitHub & Vercel), CANONICAL_PROJECTS is authoritative.
+  if (!isAdminActive) {
+    return CANONICAL_PROJECTS;
+  }
+
+  // If Admin Mode is active, allow text drafts, but enforce canonical static images
   const saved = localStorage.getItem(STORAGE_KEY_PROJECTS);
   if (saved) {
     try {
@@ -326,36 +343,28 @@ export function getLiveProjects(): Project[] {
         return CANONICAL_PROJECTS.map((defaultProj) => {
           const savedProj = parsed.find((p) => p.id === defaultProj.id);
           if (savedProj) {
+            // Keep canonical display images deterministic
             const updatedPlaceholders = defaultProj.displayPlaceholders.map((dpPh, idx) => {
               const savedPh = savedProj.displayPlaceholders?.[idx];
               if (!savedPh) return dpPh;
               return {
                 ...dpPh,
-                ...savedPh,
-                imageUrl: savedPh.imageUrl ? savedPh.imageUrl.replace(/^\/assets\//, '/images/') : dpPh.imageUrl
+                title: savedPh.title || dpPh.title,
+                description: savedPh.description || dpPh.description,
+                icon: savedPh.icon || dpPh.icon,
+                externalUrl: savedPh.externalUrl !== undefined ? savedPh.externalUrl : dpPh.externalUrl,
+                // Canonical imageUrl is authoritative
+                imageUrl: dpPh.imageUrl || (savedPh.imageUrl && !savedPh.imageUrl.startsWith('data:') && !savedPh.imageUrl.startsWith('blob:') ? savedPh.imageUrl : undefined)
               };
             });
 
-            // Ensure impact reflects canonical defaults: only comma-reading has wording underneath
-            let resolvedImpact = defaultProj.impact;
-            if (defaultProj.impact === '') {
-              resolvedImpact = '';
-            } else if (defaultProj.id === 'comma-reading') {
-              resolvedImpact = defaultProj.impact;
-            } else if (savedProj.impact !== undefined) {
-              resolvedImpact = savedProj.impact;
-            }
-
-            const rawCardImage = savedProj.cardImage !== undefined ? savedProj.cardImage : defaultProj.cardImage;
-            const migratedCardImage = typeof rawCardImage === 'string' ? rawCardImage.replace(/^\/assets\//, '/images/') : rawCardImage;
-
             return {
               ...defaultProj,
-              ...savedProj,
-              cardImage: migratedCardImage,
-              isFlagship: defaultProj.isFlagship !== undefined ? defaultProj.isFlagship : savedProj.isFlagship,
+              // Never let local storage overwrite static canonical cardImage
+              cardImage: defaultProj.cardImage,
+              isFlagship: defaultProj.isFlagship,
               title: savedProj.title || defaultProj.title,
-              impact: resolvedImpact,
+              impact: defaultProj.impact,
               outcomeMetric: savedProj.outcomeMetric || defaultProj.outcomeMetric,
               process: savedProj.process ? { ...defaultProj.process, ...savedProj.process } : defaultProj.process,
               deliverables: savedProj.deliverables || defaultProj.deliverables,
@@ -368,9 +377,10 @@ export function getLiveProjects(): Project[] {
         });
       }
     } catch (e) {
-      console.error('Error parsing projects from localStorage:', e);
+      console.error('Error reading admin drafts from localStorage:', e);
     }
   }
+
   return CANONICAL_PROJECTS;
 }
 

@@ -1663,12 +1663,7 @@ export default function WorkView() {
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover/ph:scale-[1.03]"
                                         referrerPolicy="no-referrer"
                                         onError={() => {
-                                          const uppercaseUrl = `/images/${activeProject.id.toUpperCase()}_DISPLAY_${ph.originalIdx + 1}.png`;
-                                          if (currentImgUrl === defaultLowerUrl) {
-                                            setImageUrls(prev => ({ ...prev, [imgKey]: uppercaseUrl }));
-                                          } else {
-                                            setImageErrors(prev => ({ ...prev, [imgKey]: true }));
-                                          }
+                                          setImageErrors(prev => ({ ...prev, [imgKey]: true }));
                                         }}
                                       />
                                     ) : (
