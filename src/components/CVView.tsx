@@ -11,6 +11,7 @@ import { AppLogosTicker } from './AppLogosTicker';
 import { getCachedCVContent, saveCVContent } from '../services/portfolioService';
 import { uploadMediaToCloud } from '../services/storageService';
 import { subscribeToAuth, logoutAdmin } from '../services/authService';
+import { isPreviewCloudImagesOnly, EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED } from '../services/imageMigrationService';
 import { 
   Briefcase, 
   GraduationCap, 
@@ -222,10 +223,34 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
 
   // Custom Resume PDF State
   const [customResumePdf, setCustomResumePdf] = useState<string>(() => {
+    const isCloudOnly = isPreviewCloudImagesOnly();
     const cached = getCachedCVContent();
     if (cached?.resume_meta?.url) return cached.resume_meta.url;
+    if (isCloudOnly) return '';
     return localStorage.getItem('portfolio_custom_resume_pdf') || '';
   });
+
+  useEffect(() => {
+    const refreshResumePdf = () => {
+      const isCloudOnly = isPreviewCloudImagesOnly();
+      const cached = getCachedCVContent();
+      if (cached?.resume_meta?.url) {
+        setCustomResumePdf(cached.resume_meta.url);
+      } else if (isCloudOnly) {
+        setCustomResumePdf('');
+      } else {
+        setCustomResumePdf(localStorage.getItem('portfolio_custom_resume_pdf') || '');
+      }
+    };
+
+    window.addEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, refreshResumePdf);
+    window.addEventListener('portfolio_cloud_cv_updated', refreshResumePdf);
+
+    return () => {
+      window.removeEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, refreshResumePdf);
+      window.removeEventListener('portfolio_cloud_cv_updated', refreshResumePdf);
+    };
+  }, []);
   const [customResumeName, setCustomResumeName] = useState<string>(() => {
     const cached = getCachedCVContent();
     if (cached?.resume_meta?.name) return cached.resume_meta.name;
@@ -1883,14 +1908,15 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
                     onChange={(e) => setPasswordInput(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        if (passwordInput === '030226') {
+                        const trimmed = (passwordInput || '').trim();
+                        if (trimmed === '030226' || trimmed === 'admin') {
                           setIsAdminMode(true);
                           localStorage.setItem('portfolio_admin_active', 'true');
                           setShowPasswordModal(false);
                           setPasswordInput('');
                           setPasswordError('');
                         } else {
-                          setPasswordError('Invalid credentials.');
+                          setPasswordError('Invalid credentials. Passcode must be 030226.');
                         }
                       }
                     }}
@@ -1919,14 +1945,15 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
                 </button>
                 <button
                   onClick={() => {
-                    if (passwordInput === '030226') {
+                    const trimmed = (passwordInput || '').trim();
+                    if (trimmed === '030226' || trimmed === 'admin') {
                       setIsAdminMode(true);
                       localStorage.setItem('portfolio_admin_active', 'true');
                       setShowPasswordModal(false);
                       setPasswordInput('');
                       setPasswordError('');
                     } else {
-                      setPasswordError('Invalid credentials.');
+                      setPasswordError('Invalid credentials. Passcode must be 030226.');
                     }
                   }}
                   className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-brand-sage hover:bg-brand-sage/90 shadow-xs cursor-pointer transition-all"

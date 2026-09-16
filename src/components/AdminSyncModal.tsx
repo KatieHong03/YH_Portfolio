@@ -18,7 +18,8 @@ import {
   ExternalLink,
   Lock,
   Server,
-  Layers
+  Layers,
+  GitBranch
 } from 'lucide-react';
 import { getLiveProjects } from '../utils/projectsData';
 import { 
@@ -29,10 +30,12 @@ import {
   isSupabaseConfigured, 
   getSupabaseCredentials 
 } from '../lib/supabase';
+import { ImageMigrationPanel } from './ImageMigrationPanel';
 
 interface AdminSyncModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialTab?: 'images' | 'migrate' | 'config' | 'sql';
 }
 
 interface AuditReport {
@@ -47,8 +50,12 @@ interface AuditReport {
   keysDetected: string[];
 }
 
-export const AdminSyncModal: React.FC<AdminSyncModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'migrate' | 'config' | 'sql'>('migrate');
+export const AdminSyncModal: React.FC<AdminSyncModalProps> = ({ 
+  isOpen, 
+  onClose,
+  initialTab = 'images'
+}) => {
+  const [activeTab, setActiveTab] = useState<'images' | 'migrate' | 'config' | 'sql'>(initialTab);
   const [isMigrating, setIsMigrating] = useState(false);
   const [migrationProgress, setMigrationProgress] = useState<{ step: string; percent: number }>({
     step: '',
@@ -173,13 +180,16 @@ export const AdminSyncModal: React.FC<AdminSyncModalProps> = ({ isOpen, onClose 
 
   useEffect(() => {
     if (isOpen) {
+      if (initialTab) {
+        setActiveTab(initialTab);
+      }
       runAudit();
       setMigrationReport(null);
       setErrorMessage(null);
       setSupabaseUrlInput(creds.url);
       setSupabaseKeyInput(creds.anonKey);
     }
-  }, [isOpen]);
+  }, [isOpen, initialTab]);
 
   const handleSaveCredentials = () => {
     if (supabaseUrlInput.trim()) {
@@ -342,7 +352,7 @@ CREATE POLICY "Admin write media" ON storage.objects FOR ALL TO authenticated US
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full border border-brand-border shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-3xl p-6 sm:p-8 max-w-3xl w-full border border-brand-border shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
         <div className="flex items-start justify-between border-b border-brand-border/60 pb-4">
@@ -352,11 +362,11 @@ CREATE POLICY "Admin write media" ON storage.objects FOR ALL TO authenticated US
                 <Database className="w-5 h-5" />
               </span>
               <h3 className="font-serif font-bold text-xl text-brand-text">
-                Cloud CMS & Migration Manager
+                Cloud CMS &amp; Migration Manager
               </h3>
             </div>
             <p className="text-xs text-brand-muted font-sans leading-relaxed">
-              Transition from browser-only storage to a real Supabase database & storage backend.
+              Transition from browser-only storage to a real Supabase database &amp; storage backend.
             </p>
           </div>
           <button 
@@ -368,23 +378,39 @@ CREATE POLICY "Admin write media" ON storage.objects FOR ALL TO authenticated US
         </div>
 
         {/* Tab Selection */}
-        <div className="flex items-center gap-2 border-b border-brand-border/60 pb-2">
+        <div className="flex items-center gap-2 border-b border-brand-border/60 pb-2 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('images')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap ${
+              activeTab === 'images' 
+                ? 'bg-brand-sage text-white shadow-3xs' 
+                : 'text-brand-muted hover:text-brand-text hover:bg-brand-bg'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>Migrate Images Only</span>
+            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+              activeTab === 'images' ? 'bg-white/20 text-white' : 'bg-brand-border/60 text-brand-muted'
+            }`}>
+              Recommended
+            </span>
+          </button>
           <button
             onClick={() => setActiveTab('migrate')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap ${
               activeTab === 'migrate' 
-                ? 'bg-brand-sage text-white' 
+                ? 'bg-brand-sage text-white shadow-3xs' 
                 : 'text-brand-muted hover:text-brand-text hover:bg-brand-bg'
             }`}
           >
             <CloudUpload className="w-3.5 h-3.5" />
-            Migrate to Cloud
+            <span>All Content Sync</span>
           </button>
           <button
             onClick={() => setActiveTab('config')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap ${
               activeTab === 'config' 
-                ? 'bg-brand-sage text-white' 
+                ? 'bg-brand-sage text-white shadow-3xs' 
                 : 'text-brand-muted hover:text-brand-text hover:bg-brand-bg'
             }`}
           >
@@ -398,9 +424,9 @@ CREATE POLICY "Admin write media" ON storage.objects FOR ALL TO authenticated US
           </button>
           <button
             onClick={() => setActiveTab('sql')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap ${
               activeTab === 'sql' 
-                ? 'bg-brand-sage text-white' 
+                ? 'bg-brand-sage text-white shadow-3xs' 
                 : 'text-brand-muted hover:text-brand-text hover:bg-brand-bg'
             }`}
           >
@@ -410,7 +436,16 @@ CREATE POLICY "Admin write media" ON storage.objects FOR ALL TO authenticated US
         </div>
 
         {/* ==========================================
-            TAB 1: MIGRATE TO CLOUD
+            TAB 0: MIGRATE IMAGES ONLY (IMAGE-ONLY FOCUS)
+            ========================================== */}
+        {activeTab === 'images' && (
+          <ImageMigrationPanel 
+            onSwitchToConfigTab={() => setActiveTab('config')} 
+          />
+        )}
+
+        {/* ==========================================
+            TAB 1: MIGRATE TO CLOUD (ALL CONTENT)
             ========================================== */}
         {activeTab === 'migrate' && (
           <div className="space-y-5">
@@ -524,24 +559,51 @@ CREATE POLICY "Admin write media" ON storage.objects FOR ALL TO authenticated US
               </div>
             )}
 
+            {/* GitHub & Vercel Deployment Guide */}
+            <div className="p-4 bg-stone-50 border border-brand-border/70 rounded-2xl space-y-2.5">
+              <div className="flex items-center gap-2 text-brand-text font-bold text-xs">
+                <GitBranch className="w-4 h-4 text-brand-sage" />
+                <span>Deploying with GitHub &amp; Vercel (No Database Required)</span>
+              </div>
+              <p className="text-[11.5px] text-brand-muted leading-relaxed font-sans">
+                If you host your portfolio on Vercel connected to GitHub, you do not need Supabase! All you need is to export your local edits into your repository code:
+              </p>
+              <ol className="list-decimal list-inside text-[11px] text-brand-text space-y-1 font-sans pl-1">
+                <li>Click <strong>&ldquo;Download Local Data Backup (.json)&rdquo;</strong> below to save your 33 images and edits.</li>
+                <li>Send or drop that file here in the AI Studio chat.</li>
+                <li>The coding assistant will permanently embed all your images and copy into the project files so that your next commit to GitHub will show everything on Vercel!</li>
+              </ol>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
               <button
-                onClick={handleRunMigration}
-                disabled={isMigrating || !configured}
-                className="w-full sm:w-auto flex-1 px-5 py-3 bg-brand-sage hover:bg-brand-sage/90 disabled:opacity-50 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer disabled:cursor-not-allowed"
+                onClick={handleDownloadJsonBackup}
+                className="w-full sm:w-auto flex-1 px-5 py-3 bg-brand-sage hover:bg-brand-sage/90 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+                title="Download complete JSON backup of current browser localStorage"
               >
-                <CloudUpload className="w-4 h-4" />
-                <span>Migrate Local Admin Data to Cloud</span>
+                <Download className="w-4 h-4" />
+                <span>Download Local Data Backup (.json)</span>
               </button>
 
               <button
-                onClick={handleDownloadJsonBackup}
-                className="w-full sm:w-auto px-4 py-3 bg-brand-bg hover:bg-brand-border/40 text-brand-text rounded-2xl font-semibold text-xs flex items-center justify-center gap-2 border border-brand-border transition-colors cursor-pointer"
-                title="Download complete JSON backup of current browser localStorage"
+                onClick={() => {
+                  if (!configured) {
+                    setActiveTab('config');
+                  } else {
+                    handleRunMigration();
+                  }
+                }}
+                disabled={isMigrating}
+                className={`w-full sm:w-auto px-4 py-3 rounded-2xl font-semibold text-xs flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                  !configured 
+                    ? 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100'
+                    : 'bg-brand-bg hover:bg-brand-border/40 text-brand-text border-brand-border'
+                }`}
+                title={!configured ? 'Configure Supabase to enable cloud database migration' : 'Migrate data to Supabase'}
               >
-                <Download className="w-4 h-4 text-brand-muted" />
-                <span>Backup Local JSON</span>
+                <CloudUpload className="w-4 h-4 text-brand-sage" />
+                <span>{configured ? 'Migrate to Supabase Cloud' : 'Connect Supabase Cloud'}</span>
               </button>
             </div>
           </div>

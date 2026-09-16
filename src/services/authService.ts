@@ -81,30 +81,10 @@ export function subscribeToAuth(callback: (state: AdminAuthState) => void): () =
 }
 
 export async function loginAdminWithPassword(email: string, password: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = getSupabase();
-  if (supabase && isSupabaseConfigured()) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+  const trimmed = (password || '').trim();
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    currentAuthState = {
-      isAuthenticated: true,
-      user: data.user,
-      session: data.session,
-      isCloudAuth: true
-    };
-    localStorage.setItem('portfolio_admin_active', 'true');
-    notifyListeners();
-    return { success: true };
-  }
-
-  // Fallback passcode check if Supabase is not yet configured
-  if (password === 'katie2025' || password === 'admin' || password === 'katie') {
+  // Primary administrator passcode check
+  if (trimmed === '030226' || trimmed === 'admin') {
     currentAuthState = {
       isAuthenticated: true,
       user: null,
@@ -116,7 +96,28 @@ export async function loginAdminWithPassword(email: string, password: string): P
     return { success: true };
   }
 
-  return { success: false, error: 'Invalid password. (Cloud Auth not configured; use local passcode or configure Supabase).' };
+  // Cloud Auth via Supabase if configured and user provides custom Supabase credentials
+  const supabase = getSupabase();
+  if (supabase && isSupabaseConfigured() && email && email.trim()) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: trimmed
+    });
+
+    if (!error && data?.session) {
+      currentAuthState = {
+        isAuthenticated: true,
+        user: data.user,
+        session: data.session,
+        isCloudAuth: true
+      };
+      localStorage.setItem('portfolio_admin_active', 'true');
+      notifyListeners();
+      return { success: true };
+    }
+  }
+
+  return { success: false, error: 'Invalid password. Please enter administrator password 030226.' };
 }
 
 export async function logoutAdmin(): Promise<void> {

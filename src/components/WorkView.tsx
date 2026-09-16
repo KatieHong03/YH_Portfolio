@@ -63,8 +63,15 @@ import {
   Camera,
   Trash2,
   CloudUpload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Eye,
+  EyeOff
 } from 'lucide-react';
+import { 
+  isPreviewCloudImagesOnly, 
+  setPreviewCloudImagesOnly, 
+  EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED 
+} from '../services/imageMigrationService';
 
 export type { Project };
 export const PROJECTS = CANONICAL_PROJECTS;
@@ -281,8 +288,20 @@ export default function WorkView() {
   }, []);
 
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
+  const [syncModalTab, setSyncModalTab] = useState<'images' | 'migrate' | 'config' | 'sql'>('images');
+  const [previewCloudOnly, setPreviewCloudOnly] = useState<boolean>(() => isPreviewCloudImagesOnly());
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+
+  useEffect(() => {
+    const handleCloudToggle = () => {
+      setPreviewCloudOnly(isPreviewCloudImagesOnly());
+    };
+    window.addEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, handleCloudToggle);
+    return () => {
+      window.removeEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, handleCloudToggle);
+    };
+  }, []);
 
   // Form states
   const [editTitle, setEditTitle] = useState('');
@@ -756,6 +775,40 @@ export default function WorkView() {
 
   return (
     <div className="space-y-12 animate-fadeIn pb-20">
+      {/* Preview Cloud Images Active Banner */}
+      {previewCloudOnly && (
+        <div className="p-4 bg-emerald-50/95 border border-emerald-300 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-emerald-950 shadow-sm animate-fadeIn">
+          <div className="flex items-center gap-2.5">
+            <span className="p-1.5 rounded-lg bg-emerald-600 text-white shrink-0">
+              <Eye className="w-4 h-4" />
+            </span>
+            <div className="space-y-0.5">
+              <span className="font-bold block">Previewing Cloud Images Only (Testing Public Vercel View)</span>
+              <p className="text-[11px] text-emerald-800/80 font-sans">
+                Local browser image overrides are bypassed. All projects and playground galleries render strictly from Supabase.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                setSyncModalTab('images');
+                setShowSyncModal(true);
+              }}
+              className="px-3 py-1.5 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+            >
+              Open Image Migrator
+            </button>
+            <button
+              onClick={() => setPreviewCloudImagesOnly(false)}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer"
+            >
+              Exit Preview Mode
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Title Header Block */}
       <motion.section 
         initial={{ opacity: 0, y: 24 }}
@@ -2171,18 +2224,50 @@ export default function WorkView() {
           ========================================== */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
         {isAdminMode ? (
-          <div className="bg-white/95 backdrop-blur-md border border-brand-sage/40 rounded-2xl px-4 py-2.5 shadow-xl flex items-center gap-3.5 text-xs animate-fadeIn">
+          <div className="bg-white/95 backdrop-blur-md border border-brand-sage/40 rounded-2xl px-4 py-2.5 shadow-xl flex items-center gap-3 text-xs animate-fadeIn">
             <span className="flex items-center gap-1.5 text-brand-sage font-medium">
               <span className="w-2 h-2 rounded-full bg-brand-sage animate-ping" />
               Admin Active
             </span>
             <span className="text-brand-border h-4 w-px bg-brand-border/80" />
+
+            {/* Direct Image Migration Button */}
             <button 
-              onClick={() => setShowSyncModal(true)}
-              className="text-brand-sage hover:text-brand-sage/80 hover:underline transition-colors cursor-pointer flex items-center gap-1 font-sans font-semibold"
+              onClick={() => {
+                setSyncModalTab('images');
+                setShowSyncModal(true);
+              }}
+              className="bg-brand-sage text-white hover:bg-brand-sage/90 px-2.5 py-1 rounded-lg font-sans font-bold flex items-center gap-1.5 cursor-pointer shadow-3xs transition-all"
+              id="admin-btn-migrate-images-cloud"
+              title="Migrate Current Images to Supabase Cloud"
+            >
+              <ImageIcon className="w-3.5 h-3.5" /> Migrate Images
+            </button>
+
+            {/* Preview Cloud Images Toggle */}
+            <button
+              onClick={() => setPreviewCloudImagesOnly(!previewCloudOnly)}
+              className={`px-2.5 py-1 rounded-lg font-sans font-medium flex items-center gap-1.5 cursor-pointer transition-all ${
+                previewCloudOnly 
+                  ? 'bg-emerald-100 text-emerald-800 font-bold border border-emerald-300' 
+                  : 'text-brand-muted hover:text-brand-text hover:bg-brand-bg'
+              }`}
+              title={previewCloudOnly ? "Disable Cloud-Only Preview (Restore local overrides)" : "Preview what public Vercel visitors see"}
+            >
+              {previewCloudOnly ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-brand-muted" />}
+              <span>{previewCloudOnly ? 'Cloud View ON' : 'Cloud View'}</span>
+            </button>
+
+            <span className="text-brand-border h-4 w-px bg-brand-border/80" />
+            <button 
+              onClick={() => {
+                setSyncModalTab('migrate');
+                setShowSyncModal(true);
+              }}
+              className="text-brand-muted hover:text-brand-text transition-colors cursor-pointer flex items-center gap-1 font-sans"
               title="Sync & Persist to GitHub / Vercel"
             >
-              <CloudUpload className="w-3.5 h-3.5" /> Sync to Codebase
+              <CloudUpload className="w-3.5 h-3.5" /> Full Sync
             </button>
             <span className="text-brand-border h-4 w-px bg-brand-border/80" />
             <button 
@@ -2215,6 +2300,7 @@ export default function WorkView() {
       <AdminSyncModal 
         isOpen={showSyncModal} 
         onClose={() => setShowSyncModal(false)} 
+        initialTab={syncModalTab}
       />
 
       {/* Admin Login Modal with Supabase Auth */}

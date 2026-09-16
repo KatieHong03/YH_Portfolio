@@ -71,34 +71,12 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <p className="font-sans text-xs text-brand-muted leading-relaxed">
-            {isCloud 
-              ? 'Sign in with your Supabase administrator account to edit portfolio content and upload media.' 
-              : 'Sign in to access portfolio editing mode.'
-            }
+            Enter the administrator password to enable live editing and media management.
           </p>
-
-          {isCloud && (
-            <div className="space-y-1">
-              <label className="font-mono text-[9px] uppercase tracking-wider text-brand-muted font-bold block">
-                Admin Email
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  placeholder="admin@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 text-xs font-sans text-brand-text bg-white border border-brand-border rounded-xl focus:outline-hidden focus:border-brand-sage pl-8"
-                  required
-                />
-                <Mail className="w-3.5 h-3.5 text-brand-muted absolute left-2.5 top-2.5" />
-              </div>
-            </div>
-          )}
 
           <div className="space-y-1">
             <label className="font-mono text-[9px] uppercase tracking-wider text-brand-muted font-bold block">
-              Password
+              Admin Password
             </label>
             <div className="relative">
               <input
@@ -113,6 +91,27 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
               <Key className="w-3.5 h-3.5 text-brand-muted absolute left-2.5 top-2.5" />
             </div>
           </div>
+
+          {isCloud && (
+            <div className="space-y-1 pt-1">
+              <div className="flex items-center justify-between">
+                <label className="font-mono text-[9px] uppercase tracking-wider text-brand-muted font-medium block">
+                  Cloud Admin Email (Optional)
+                </label>
+                <span className="text-[9px] text-brand-muted font-mono">For Supabase Auth</span>
+              </div>
+              <div className="relative">
+                <input
+                  type="email"
+                  placeholder="admin@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 text-xs font-sans text-brand-text bg-white border border-brand-border/70 rounded-xl focus:outline-hidden focus:border-brand-sage pl-8"
+                />
+                <Mail className="w-3.5 h-3.5 text-brand-muted absolute left-2.5 top-2.5" />
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-xs text-red-700">

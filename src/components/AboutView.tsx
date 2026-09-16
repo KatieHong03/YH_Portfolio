@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getCachedAboutContent, saveAboutContent } from '../services/portfolioService';
 import { subscribeToAuth } from '../services/authService';
+import { AdminLoginModal } from './AdminLoginModal';
 import { 
   ArrowRight, 
   Sparkles, 
@@ -80,6 +81,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
     return localStorage.getItem('portfolio_admin_active') === 'true';
   });
+  const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
 
   useEffect(() => {
     const unsub = subscribeToAuth((st) => {
@@ -810,9 +812,12 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
 
         <button
           onClick={() => {
-            const next = !isAdminMode;
-            setIsAdminMode(next);
-            localStorage.setItem('portfolio_admin_active', String(next));
+            if (isAdminMode) {
+              setIsAdminMode(false);
+              localStorage.removeItem('portfolio_admin_active');
+            } else {
+              setShowPasswordModal(true);
+            }
           }}
           className={`p-3 rounded-full shadow-lg border transition-all duration-300 cursor-pointer flex items-center justify-center ${
             isAdminMode 
@@ -824,6 +829,12 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
           <Lock className="w-4 h-4" />
         </button>
       </div>
+
+      <AdminLoginModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onLoginSuccess={() => setIsAdminMode(true)}
+      />
     </div>
   );
 }

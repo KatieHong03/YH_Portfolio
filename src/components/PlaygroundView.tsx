@@ -38,6 +38,7 @@ import { CaseStudyView } from './CaseStudyView';
 import { uploadMediaToCloud } from '../services/storageService';
 import { savePlaygroundProject, getCachedPlaygroundData } from '../services/portfolioService';
 import { subscribeToAuth } from '../services/authService';
+import { isPreviewCloudImagesOnly, EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED } from '../services/imageMigrationService';
 import { TarotDemo } from './demos/TarotDemo';
 import { ScenarioBuilderDemo } from './demos/ScenarioBuilderDemo';
 import { AnalyticsDemo } from './demos/AnalyticsDemo';
@@ -372,6 +373,8 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
 
 // Helper to retrieve saved showcase images
 const getSavedProjectImages = (projectId: string, defaultImages: ShowcaseImage[]): ShowcaseImage[] => {
+  const isCloudOnly = isPreviewCloudImagesOnly();
+
   // 1. Check Supabase cached playground gallery
   const cloudData = getCachedPlaygroundData();
   if (cloudData && cloudData.galleries && cloudData.galleries[projectId] && Array.isArray(cloudData.galleries[projectId]) && cloudData.galleries[projectId].length > 0) {
@@ -381,6 +384,11 @@ const getSavedProjectImages = (projectId: string, defaultImages: ShowcaseImage[]
       }
       return item;
     });
+  }
+
+  // If previewing cloud images only, bypass local browser overrides
+  if (isCloudOnly) {
+    return defaultImages;
   }
 
   // 2. Fall back to localStorage if available
@@ -600,12 +608,13 @@ export default function PlaygroundView() {
 
   // Logo Customization State (Admin Mode)
   const [customLogos, setCustomLogos] = useState<Record<string, string>>(() => {
+    const isCloudOnly = isPreviewCloudImagesOnly();
     const map: Record<string, string> = {};
     const cached = getCachedPlaygroundData();
     PLAYGROUND_PROJECTS.forEach(p => {
       if (cached[p.id]?.logo_url) {
         map[p.id] = cached[p.id].logo_url!;
-      } else {
+      } else if (!isCloudOnly) {
         const saved = localStorage.getItem(`portfolio_playground_logo_${p.id}`);
         if (saved) {
           map[p.id] = saved;
@@ -749,6 +758,34 @@ export default function PlaygroundView() {
     return () => {
       unsub();
       window.removeEventListener('storage', checkAdmin);
+    };
+  }, []);
+
+  // Listen for Cloud Images Preview toggles and Supabase updates
+  useEffect(() => {
+    const refreshPlaygroundImages = () => {
+      const isCloudOnly = isPreviewCloudImagesOnly();
+      const map: Record<string, string> = {};
+      const cached = getCachedPlaygroundData();
+      PLAYGROUND_PROJECTS.forEach(p => {
+        if (cached[p.id]?.logo_url) {
+          map[p.id] = cached[p.id].logo_url!;
+        } else if (!isCloudOnly) {
+          const saved = localStorage.getItem(`portfolio_playground_logo_${p.id}`);
+          if (saved) {
+            map[p.id] = saved;
+          }
+        }
+      });
+      setCustomLogos(map);
+    };
+
+    window.addEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, refreshPlaygroundImages);
+    window.addEventListener('portfolio_cloud_playground_updated', refreshPlaygroundImages);
+
+    return () => {
+      window.removeEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, refreshPlaygroundImages);
+      window.removeEventListener('portfolio_cloud_playground_updated', refreshPlaygroundImages);
     };
   }, []);
 
@@ -1114,14 +1151,15 @@ export default function PlaygroundView() {
   };
 
   const handleVerifyPassword = () => {
-    if (passwordInput === '030226' || passwordInput === 'admin') {
+    const trimmed = (passwordInput || '').trim();
+    if (trimmed === '030226' || trimmed === 'admin') {
       setIsAdminMode(true);
       localStorage.setItem('portfolio_admin_active', 'true');
       setShowPasswordModal(false);
       setPasswordInput('');
       setPasswordError('');
     } else {
-      setPasswordError('Invalid credentials.');
+      setPasswordError('Invalid credentials. Passcode must be 030226.');
     }
   };
 
