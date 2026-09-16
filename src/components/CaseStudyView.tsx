@@ -161,70 +161,14 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
   onUpdateDisplayImage
 }) => {
   const caseStudyRef = useRef<HTMLElement>(null);
-  const coverFileInputRef = useRef<HTMLInputElement>(null);
-  const displayFileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState('summary');
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [showCoverUrlModal, setShowCoverUrlModal] = useState(false);
   const [customCoverUrlInput, setCustomCoverUrlInput] = useState('');
-  const [isCoverDragging, setIsCoverDragging] = useState(false);
   const [editingDisplayUrlIdx, setEditingDisplayUrlIdx] = useState<number | null>(null);
   const [customDisplayUrlInput, setCustomDisplayUrlInput] = useState('');
-  const [draggingDisplayIdx, setDraggingDisplayIdx] = useState<number | null>(null);
-
-  const handleCoverFileSelect = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file (PNG, JPG, WEBP, etc.)');
-      return;
-    }
-    try {
-      const cloudUrl = await uploadMediaToCloud(file, `${activeProject.id}-cover`);
-      if (onUpdateCoverImage) {
-        onUpdateCoverImage(cloudUrl);
-      }
-    } catch (e) {
-      console.warn('Direct upload failed, falling back to local compression:', e);
-      try {
-        const compressed = await compressImageFile(file, 1400, 1000, 0.85);
-        if (onUpdateCoverImage) {
-          onUpdateCoverImage(compressed);
-        }
-      } catch (err) {
-        console.error('Failed to compress cover image:', err);
-      }
-    }
-  };
-
-  const handleDisplayFileSelect = async (placeholderIdx: number, file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file (PNG, JPG, WEBP, etc.)');
-      return;
-    }
-    try {
-      const cloudUrl = await uploadMediaToCloud(file, `${activeProject.id}-display-0${placeholderIdx + 1}`);
-      const imgKey = `${activeProject.id}_${placeholderIdx}`;
-      setImageErrors(prev => ({ ...prev, [imgKey]: false }));
-      setImageUrls(prev => ({ ...prev, [imgKey]: cloudUrl }));
-      if (onUpdateDisplayImage) {
-        onUpdateDisplayImage(placeholderIdx, cloudUrl);
-      }
-    } catch (e) {
-      console.warn('Direct upload failed, falling back to local compression:', e);
-      try {
-        const compressed = await compressImageFile(file, 1400, 1000, 0.85);
-        const imgKey = `${activeProject.id}_${placeholderIdx}`;
-        setImageErrors(prev => ({ ...prev, [imgKey]: false }));
-        setImageUrls(prev => ({ ...prev, [imgKey]: compressed }));
-        if (onUpdateDisplayImage) {
-          onUpdateDisplayImage(placeholderIdx, compressed);
-        }
-      } catch (err) {
-        console.error('Failed to compress display image:', err);
-      }
-    }
-  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -357,65 +301,10 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
               COVER PAGE HERO / SHOWCASE (With Admin Edit)
               ========================================== */}
           <div className="relative group/cover">
-            {/* Hidden File Input for instant local image upload */}
-            <input
-              type="file"
-              ref={coverFileInputRef}
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  handleCoverFileSelect(file);
-                }
-                e.target.value = '';
-              }}
-            />
-
-            {/* Desktop Mockup Frame */}
+            {/* Normal Photo Frame */}
             <div 
-              onDragOver={(e) => {
-                if (isAdminMode) {
-                  e.preventDefault();
-                  setIsCoverDragging(true);
-                }
-              }}
-              onDragLeave={(e) => {
-                if (isAdminMode) {
-                  e.preventDefault();
-                  setIsCoverDragging(false);
-                }
-              }}
-              onDrop={(e) => {
-                if (isAdminMode) {
-                  e.preventDefault();
-                  setIsCoverDragging(false);
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) {
-                    handleCoverFileSelect(file);
-                  }
-                }
-              }}
-              className={`
-                relative w-full rounded-2xl bg-[#F5F2EC] border border-[#E3DDD1] overflow-hidden shadow-[0_12px_36px_-8px_rgba(75,70,64,0.12)] transition-all duration-300
-                ${isCoverDragging ? 'ring-4 ring-brand-sage/60 border-brand-sage' : ''}
-              `}
+              className="relative w-full rounded-2xl bg-[#F5F2EC] border border-[#E3DDD1] overflow-hidden shadow-[0_12px_36px_-8px_rgba(75,70,64,0.12)] transition-all duration-300"
             >
-              {/* Window Controls Top Bar */}
-              <div className="bg-[#EFEAE1] px-4 py-2.5 border-b border-[#DFD8CC] flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#E07A5F]/80" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#E9C46A]/80" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#81B29A]/80" />
-                </div>
-                <div className="px-4 py-0.5 rounded-md bg-white/70 border border-brand-border/40 text-[10px] font-mono text-brand-muted truncate max-w-xs sm:max-w-md">
-                  {activeProject.externalUrl || `portfolio://projects/${activeProject.id}/cover`}
-                </div>
-                <div className="w-8 flex justify-end">
-                  <span className="font-mono text-[9px] font-bold text-brand-muted/70 uppercase tracking-widest hidden sm:inline">COVER</span>
-                </div>
-              </div>
-
               {/* Cover Mockup Image */}
               <div className="relative aspect-[16/10] sm:aspect-[16/9] md:aspect-[3/2] w-full bg-[#FAF8F5] overflow-hidden flex items-center justify-center">
                 {activeProject.cardImage ? (
@@ -424,6 +313,35 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                     alt={`${activeProject.title} Cover Mockup`}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover select-none transition-transform duration-500"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      const currentSrc = target.src;
+                      if (currentSrc.endsWith('.jpg') && !target.dataset.triedPng) {
+                        target.dataset.triedPng = 'true';
+                        target.src = currentSrc.slice(0, -4) + '.png';
+                        return;
+                      }
+                      if (currentSrc.endsWith('.png') && !target.dataset.triedJpg) {
+                        target.dataset.triedJpg = 'true';
+                        target.src = currentSrc.slice(0, -4) + '.jpg';
+                        return;
+                      }
+                      if (currentSrc.includes('fsr-product-knowledge') && !target.dataset.triedPathway) {
+                        target.dataset.triedPathway = 'true';
+                        target.src = currentSrc.replace('fsr-product-knowledge', 'fsr-learning-pathway');
+                        return;
+                      }
+                      if (currentSrc.includes('-cover.jpg') && !target.dataset.triedCover1) {
+                        target.dataset.triedCover1 = 'true';
+                        target.src = currentSrc.replace('-cover.jpg', '-cover-1.jpg');
+                        return;
+                      }
+                      if (currentSrc.includes('-cover-1.jpg') && !target.dataset.triedCover) {
+                        target.dataset.triedCover = 'true';
+                        target.src = currentSrc.replace('-cover-1.jpg', '-cover.jpg');
+                        return;
+                      }
+                    }}
                   />
                 ) : (
                   <div className="text-center p-8 space-y-3">
@@ -450,20 +368,13 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                       <div className="flex items-center justify-center gap-2 flex-wrap">
                         <button
                           type="button"
-                          onClick={() => coverFileInputRef.current?.click()}
-                          className="px-3.5 py-1.5 rounded-xl bg-brand-sage text-white text-xs font-bold hover:bg-brand-sage/90 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                        >
-                          <Upload className="w-3.5 h-3.5" /> Upload File
-                        </button>
-                        <button
-                          type="button"
                           onClick={() => {
                             setCustomCoverUrlInput(activeProject.cardImage || '');
                             setShowCoverUrlModal(true);
                           }}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#FAF8F5] text-brand-text text-xs font-bold hover:bg-brand-border/30 border border-brand-border transition-all flex items-center gap-1.5 cursor-pointer"
+                          className="px-3.5 py-1.5 rounded-xl bg-brand-sage text-white text-xs font-bold hover:bg-brand-sage/90 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                         >
-                          <Edit className="w-3.5 h-3.5" /> Enter URL
+                          <Edit className="w-3.5 h-3.5" /> Set Image Path / URL
                         </button>
                         {activeProject.cardImage && (
                           <button
@@ -479,7 +390,6 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                           </button>
                         )}
                       </div>
-                      <p className="text-[10px] font-mono text-brand-muted/70">Tip: You can also drag & drop an image here</p>
                     </div>
                   </div>
                 )}
@@ -630,28 +540,12 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                     const defaultLowerUrl = `/images/${activeProject.id}-display-0${ph.originalIdx + 1}.png`;
                     const currentImgUrl = imageUrls[imgKey] || ph.imageUrl || defaultLowerUrl;
                     const isCustomImageActive = !!imageUrls[imgKey] || !!ph.imageUrl;
-                    const isDraggingThis = draggingDisplayIdx === ph.originalIdx;
                     
                     return (
                       <div
                         key={ph.originalIdx}
                         className="flex flex-col h-full group/displaycard"
                       >
-                        {/* Hidden File Input for this specific Display Box */}
-                        <input
-                          type="file"
-                          ref={(el) => { displayFileInputRefs.current[ph.originalIdx] = el; }}
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleDisplayFileSelect(ph.originalIdx, file);
-                            }
-                            e.target.value = '';
-                          }}
-                        />
-
                         <div 
                           className={`flex flex-col justify-between bg-white border border-[#EBE5DA] hover:border-brand-sage rounded-2xl p-5 transition-all duration-300 relative overflow-hidden shadow-xs hover:shadow-md hover:-translate-y-1 w-full h-full ${
                             isLink ? 'cursor-pointer' : ''
@@ -687,34 +581,9 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                               )}
                             </div>
 
-                            {/* Image Area: Enforced EXACT 4:3 Aspect Ratio, Drag & Drop Support, and Direct Upload */}
+                            {/* Image Area: Enforced EXACT 4:3 Aspect Ratio */}
                             <div 
-                              onDragOver={(e) => {
-                                if (isAdminMode) {
-                                  e.preventDefault();
-                                  setDraggingDisplayIdx(ph.originalIdx);
-                                }
-                              }}
-                              onDragLeave={(e) => {
-                                if (isAdminMode) {
-                                  e.preventDefault();
-                                  setDraggingDisplayIdx(null);
-                                }
-                              }}
-                              onDrop={(e) => {
-                                if (isAdminMode) {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setDraggingDisplayIdx(null);
-                                  const file = e.dataTransfer.files?.[0];
-                                  if (file) {
-                                    handleDisplayFileSelect(ph.originalIdx, file);
-                                  }
-                                }
-                              }}
-                              className={`w-full aspect-[4/3] rounded-xl bg-[#FAF8F5]/60 border border-brand-border/60 mb-4 overflow-hidden relative transition-all duration-300 flex flex-col shadow-2xs group/displayimg ${
-                                isDraggingThis ? 'ring-4 ring-brand-sage/60 border-brand-sage' : ''
-                              }`}
+                              className="w-full aspect-[4/3] rounded-xl bg-[#FAF8F5]/60 border border-brand-border/60 mb-4 overflow-hidden relative transition-all duration-300 flex flex-col shadow-2xs group/displayimg"
                             >
                               {!hasImageError ? (
                                 <img 
@@ -722,7 +591,24 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                                   alt={ph.title}
                                   className="w-full h-full object-cover transition-transform duration-500 group-hover/displayimg:scale-105"
                                   referrerPolicy="no-referrer"
-                                  onError={() => {
+                                  onError={(e) => {
+                                    const target = e.currentTarget;
+                                    const currentSrc = target.src;
+                                    if (currentSrc.endsWith('.jpg') && !target.dataset.triedPng) {
+                                      target.dataset.triedPng = 'true';
+                                      target.src = currentSrc.slice(0, -4) + '.png';
+                                      return;
+                                    }
+                                    if (currentSrc.endsWith('.png') && !target.dataset.triedJpg) {
+                                      target.dataset.triedJpg = 'true';
+                                      target.src = currentSrc.slice(0, -4) + '.jpg';
+                                      return;
+                                    }
+                                    if (currentSrc.includes('fsr-product-knowledge') && !target.dataset.triedPathway) {
+                                      target.dataset.triedPathway = 'true';
+                                      target.src = currentSrc.replace('fsr-product-knowledge', 'fsr-learning-pathway');
+                                      return;
+                                    }
                                     setImageErrors(prev => ({ ...prev, [imgKey]: true }));
                                   }}
                                 />
@@ -870,21 +756,6 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                                       </div>
                                     </div>
                                   )}
-
-                                  {/* Direct Click-to-Upload Banner */}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      displayFileInputRefs.current[ph.originalIdx]?.click();
-                                    }}
-                                    className="absolute bottom-2 left-2 right-2 border border-dashed border-brand-border/80 hover:border-brand-sage/80 pt-1 pb-1 text-center shrink-0 z-30 pointer-events-auto bg-white/95 hover:bg-white backdrop-blur-3xs rounded-md shadow-3xs cursor-pointer transition-all flex items-center justify-center gap-1 group/addbtn"
-                                  >
-                                    <span className="font-mono text-[7px] font-bold text-brand-muted/80 block group-hover/addbtn:text-brand-sage">
-                                      <span className="uppercase text-brand-sage font-extrabold">📷 Click to Upload Pic:</span> /images/{activeProject.id}-display-0{ph.originalIdx + 1}.png
-                                    </span>
-                                  </button>
                                 </div>
                               )}
 
@@ -900,22 +771,12 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          displayFileInputRefs.current[ph.originalIdx]?.click();
-                                        }}
-                                        className="px-2.5 py-1 rounded-lg bg-brand-sage text-white text-[10px] font-bold hover:bg-brand-sage/90 transition-all flex items-center gap-1 cursor-pointer shadow-3xs"
-                                      >
-                                        <Upload className="w-3 h-3" /> Upload File
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
                                           setCustomDisplayUrlInput(ph.imageUrl || imageUrls[imgKey] || '');
                                           setEditingDisplayUrlIdx(ph.originalIdx);
                                         }}
-                                        className="px-2.5 py-1 rounded-lg bg-[#FAF8F5] text-brand-text text-[10px] font-bold hover:bg-brand-border/30 border border-brand-border transition-all flex items-center gap-1 cursor-pointer"
+                                        className="px-2.5 py-1 rounded-lg bg-brand-sage text-white text-[10px] font-bold hover:bg-brand-sage/90 transition-all flex items-center gap-1 cursor-pointer shadow-3xs"
                                       >
-                                        <Edit className="w-3 h-3" /> URL
+                                        <Edit className="w-3 h-3" /> Set Image Path
                                       </button>
                                       {isCustomImageActive && (
                                         <button
@@ -1131,7 +992,7 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                   {/* Deliverables Card */}
-                  <div className="bg-white border border-[#EBE5DA] hover:border-brand-sage/50 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full">
+                  <div className="bg-white border border-[#EBE5DA] rounded-2xl p-5 shadow-xs flex flex-col justify-between h-full">
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
                         <div className="p-1.5 rounded-lg bg-brand-sage/10 text-brand-sage">
@@ -1141,7 +1002,7 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         {activeProject.deliverables.map((del, dIdx) => (
-                          <div key={dIdx} className="flex items-start gap-2 bg-[#FAF8F5]/70 hover:bg-[#FAF8F5] p-3 rounded-xl border border-brand-border/40 hover:border-brand-sage/40 transition-all">
+                          <div key={dIdx} className="flex items-start gap-2 bg-[#FAF8F5]/70 p-3 rounded-xl border border-brand-border/40">
                             <CheckCircle2 className="w-3.5 h-3.5 text-brand-sage shrink-0 mt-0.5" />
                             <span className="font-sans text-xs sm:text-sm text-brand-text font-medium leading-tight">{del}</span>
                           </div>
@@ -1152,8 +1013,8 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
 
                   {/* Impact Card */}
                   {hasImpact && (
-                    <div className="bg-white border border-[#EBE5DA] hover:border-brand-sage/50 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group/impact min-h-[160px] h-full">
-                      <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-brand-sage/5 blur-xl group-hover/impact:bg-brand-sage/10 transition-all duration-300" />
+                    <div className="bg-white border border-[#EBE5DA] rounded-2xl p-5 shadow-xs flex flex-col justify-between relative overflow-hidden min-h-[160px] h-full">
+                      <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-brand-sage/5 blur-xl pointer-events-none" />
                       
                       <div className="space-y-4 relative z-10 w-full flex-1 flex flex-col justify-between">
                         <div className="flex items-center gap-2">
@@ -1169,7 +1030,7 @@ export const CaseStudyView: React.FC<CaseStudyViewProps> = ({
                           'grid-cols-1 sm:grid-cols-3'
                         }`}>
                           {validMetrics.map((m, mIdx) => (
-                            <div key={mIdx} className="bg-[#FAF8F5]/70 border border-brand-border/40 p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-3xs hover:border-brand-sage/50 hover:bg-white transition-all h-full">
+                            <div key={mIdx} className="bg-[#FAF8F5]/70 border border-brand-border/40 p-3 rounded-xl flex flex-col items-center justify-center text-center shadow-3xs h-full">
                               <span className="font-serif font-extrabold text-xl sm:text-2xl text-brand-sage leading-none">
                                 {m.value}
                               </span>

@@ -5,7 +5,6 @@
 
 import { safeLocalStorageSet } from './imageCompressor';
 import { getCachedProjects, saveAllProjects } from '../services/portfolioService';
-import { isPreviewCloudImagesOnly } from '../services/imageMigrationService';
 
 export interface Project {
   id: string;
@@ -519,55 +518,11 @@ export function normalizeImageUrl(url?: string): string | undefined {
  * and falling back to CANONICAL_PROJECTS.
  */
 export function getLiveProjects(): Project[] {
-  const isCloudOnly = isPreviewCloudImagesOnly();
-  const cloudProjects = getCachedProjects();
-
-  // When "Preview Cloud Images Only" is toggled, bypass all local browser image overrides
-  if (isCloudOnly) {
-    if (cloudProjects && cloudProjects.length > 0 && cloudProjects !== CANONICAL_PROJECTS) {
-      return cloudProjects;
-    }
-    return CANONICAL_PROJECTS;
+  const cached = getCachedProjects();
+  if (cached && Array.isArray(cached) && cached.length > 0 && cached !== CANONICAL_PROJECTS) {
+    return cached;
   }
-
-  // If cloud projects are already loaded from database, overlay local browser image overrides if present
-  if (cloudProjects && cloudProjects.length > 0 && cloudProjects !== CANONICAL_PROJECTS) {
-    const saved = localStorage.getItem(STORAGE_KEY_PROJECTS);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as Project[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return cloudProjects.map((cp) => {
-            const savedProj = parsed.find((p) => p.id === cp.id);
-            if (!savedProj) return cp;
-
-            const cardImage = savedProj.cardImage !== undefined 
-              ? (normalizeImageUrl(savedProj.cardImage) || savedProj.cardImage) 
-              : cp.cardImage;
-
-            const displayPlaceholders = (cp.displayPlaceholders || []).map((ph, idx) => {
-              const savedPh = savedProj.displayPlaceholders?.[idx];
-              return {
-                ...ph,
-                imageUrl: savedPh?.imageUrl ? (normalizeImageUrl(savedPh.imageUrl) || savedPh.imageUrl) : ph.imageUrl
-              };
-            });
-
-            return {
-              ...cp,
-              cardImage,
-              displayPlaceholders
-            };
-          });
-        }
-      } catch {
-        // ignore
-      }
-    }
-    return cloudProjects;
-  }
-
-  const saved = localStorage.getItem(STORAGE_KEY_PROJECTS);
+  const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY_PROJECTS) : null;
   if (saved) {
     try {
       const parsed = JSON.parse(saved) as Project[];

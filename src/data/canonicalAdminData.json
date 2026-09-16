@@ -1,22 +1,638 @@
 {
-  "updatedAt": "2026-09-15T04:57:17.408Z",
+  "updatedAt": "2026-09-16T20:40:41.598Z",
   "version": "2.0.0",
   "projects": [
     {
       "id": "ra-training",
       "title": "PracticeURWay: A Training Website for Resident Assistants",
       "cardImage": "/images/ra-training-cover.jpg",
+      "isFlagship": true,
+      "projectType": "Instructional Design",
+      "types": [
+        "Instructional Design",
+        "eLearning",
+        "Learning & Development"
+      ],
+      "overview": "A training website that helps Resident Assistants review key policies, practice emergency decision-making, reflect on their responses, and access essential campus resources.",
+      "audience": "**Resident Assistants** supporting residents, responding to crises, and navigating campus protocols.",
+      "challenge": "RAs needed **quick access **to key policies, emergency steps, and practice opportunities to support **retention and decision-making**.",
+      "solution": "Built a **scenario-based training website** with policy review, branching practice, reflection prompts, and centralized resources.",
+      "externalUrl": "https://sites.google.com/view/practice-ur-way/ra-toolbox",
+      "process": {
+        "needsAnalysis": "Surveyed and interviewed learners; reviewed training data to identify knowledge gaps.",
+        "learningObjectives": "Mapped training needs into scenario-based practice, policy review, and reflection activities.",
+        "designDevelopment": "Built the website with interactive scenarios, feedback prompts, and centralized resources.",
+        "implementation": "Analyzed feedback and revised content for clarity, engagement, and retention."
+      },
+      "deliverables": [
+        "Website",
+        "Interactive Slides",
+        "Knowledge Checks",
+        "Assessment Forms",
+        "Tutorial Video"
+      ],
+      "tools": [
+        "Google Sites",
+        "Google Forms",
+        "Google Slides",
+        "Figma"
+      ],
+      "impact": "",
+      "skillsDemonstrated": [
+        "ADDIE",
+        "Needs Analysis",
+        "Learning Evaluation",
+        "Thematic Analysis"
+      ],
+      "skills": [
+        "ADDIE",
+        "Needs Analysis",
+        "Learning Evaluation",
+        "Thematic Analysis"
+      ],
+      "timeline": "September 2025 - May 2026",
+      "outcomeMetric": "95% Rating",
+      "metricsList": [
+        {
+          "value": "15%",
+          "label": "Engagement Increase"
+        },
+        {
+          "value": "95%",
+          "label": "Rated Experience 5/5"
+        },
+        {
+          "value": "2.4x",
+          "label": "Safety Confidence"
+        }
+      ],
       "displayPlaceholders": [
         {
-          "title": "Test Display",
+          "title": "Google Site Hub",
+          "description": "Centralized digital policy center & mobile toolkit for active duty RAs.",
+          "icon": "Layers",
+          "externalUrl": "https://sites.google.com/view/practice-ur-way/ra-toolbox",
           "imageUrl": "/images/ra-training-display-01.png"
+        },
+        {
+          "title": "Interactive Scenario Practices",
+          "description": "Scenario simulator with branching decision points & protocol guides.",
+          "icon": "Compass",
+          "externalUrl": "https://docs.google.com/presentation/d/1Cy0W_el54MJqr-ncG5eqtOHZ8TtFPJDAXkX2TWgyLKQ/present?slide=id.g4dfce81f19_0_45",
+          "imageUrl": "/images/ra-training-display-02.png"
+        },
+        {
+          "title": "Tutorial Video",
+          "description": "Screencast walk-through detailing UI features and RA toolkit usage.",
+          "icon": "Video",
+          "imageUrl": "/images/ra-training-display-03.png",
+          "externalUrl": "https://drive.google.com/file/d/1g31j_2YxMFp2iCw9-ZPoahNbaue_C0-T/view?usp=sharing"
+        },
+        {
+          "title": "Guides & Checklists",
+          "description": "Centralized emergency response sheets and active checklist guides.",
+          "icon": "CheckSquare",
+          "imageUrl": "/images/ra-training-display-04.png",
+          "externalUrl": "https://drive.google.com/file/d/12VPsfuBIGhe3RLU2crlChgpyTfxJlL2j/view?usp=sharing"
+        }
+      ]
+    },
+    {
+      "id": "fsr-product-knowledge",
+      "title": "Financial Service Representatives (FSR) Developmental Framework",
+      "cardImage": "/images/fsr-product-knowledge-cover.jpg",
+      "isFlagship": true,
+      "projectType": "Instructional Design",
+      "types": [
+        "Instructional Design",
+        "eLearning",
+        "Learning & Development",
+        "Flagship Project"
+      ],
+      "overview": "A **developmental pathway** that transformed FSR learning needs into targeted recommendations and high-fidelity learning solutions.",
+      "audience": "**Financial Service Representatives**, Learning & Development Team, Human Resources Department",
+      "challenge": "FSRs lacked a **clear, structured development path**, making it difficult to address **performance gaps ** and build skills consistently across different stages of growth.",
+      "solution": "Designed a **role-aligned developmental framework** that translated identified learning needs into **targeted recommendations, structured learning stages, and practical eLearning solutions**.",
+      "process": {
+        "needsAnalysis": "Reviewed FSR development stages, learning needs, performance gaps, and existing resources.",
+        "learningObjectives": "Mapped development stages to targeted learning strategies and support.",
+        "designDevelopment": "Built the pathway, recommendations, and high-fidelity learning materials.",
+        "implementation": "Refined recommendations and solutions based on stakeholder feedback."
+      },
+      "deliverables": [
+        "Learning Pathway",
+        "Recommendation Plan",
+        "Storyline Courses",
+        "Job Aids"
+      ],
+      "tools": [
+        "Articulate Storyline",
+        "Articulate Rise",
+        "LMS Platform",
+        "Canva",
+        "Microsoft 365"
+      ],
+      "impact": "",
+      "skillsDemonstrated": [
+        "ADDIE",
+        "Storyline",
+        "Needs Analysis",
+        "LMS",
+        "Learning Evaluation",
+        "Thematic Analysis",
+        "Workshop Design"
+      ],
+      "skills": [
+        "ADDIE",
+        "Storyline",
+        "Needs Analysis",
+        "LMS",
+        "Learning Evaluation",
+        "Thematic Analysis",
+        "Workshop Design"
+      ],
+      "timeline": "June 2026 - August 2026",
+      "outcomeMetric": "18% Faster Ramp",
+      "metricsList": [
+        {
+          "value": "12+",
+          "label": "Targeted Recommendations Proposed"
+        },
+        {
+          "value": "4+",
+          "label": "Learning Courses Created"
+        },
+        {
+          "value": "18%",
+          "label": "Faster Ramp-up"
+        }
+      ],
+      "displayPlaceholders": [
+        {
+          "title": "Pathway Architecture",
+          "description": "Staged Financial Service Representatives Learning Pathway",
+          "icon": "Map",
+          "imageUrl": "/images/fsr-product-knowledge-display-01.jpg",
+          "externalUrl": "https://drive.google.com/file/d/1cOCFw5R_3u4eZCjaISD-43Ewq6KSvm0h/view?usp=drive_link"
+        },
+        {
+          "title": "Course Highlight #1",
+          "description": "Introduction to Products & Services Course: Visual Highlight",
+          "icon": "Sliders",
+          "imageUrl": "/images/fsr-product-knowledge-display-02.jpg",
+          "externalUrl": "https://drive.google.com/file/d/1YiRM0YYvn2dU2HYM9-6M7KB7weur-urM/view?usp=drive_link"
+        },
+        {
+          "title": "Course Highlight #2",
+          "description": "Introduction to Products & Services Course: Interactivity Highlight",
+          "icon": "CheckSquare",
+          "imageUrl": "/images/fsr-product-knowledge-display-03.jpg",
+          "externalUrl": "https://drive.google.com/file/d/1-uYdrKR03B8vDBxHdYkdWBelZk3UzqSa/view?usp=drive_link"
+        },
+        {
+          "title": "Course Highlight #3",
+          "description": "Introduction to Products & Services Course: Interactivity Highlight",
+          "icon": "BarChart3",
+          "imageUrl": "/images/fsr-product-knowledge-display-04.jpg",
+          "externalUrl": "https://drive.google.com/file/d/103pml61MEvQbTWSonuoOPHcI9VymD3jd/view?usp=drive_link"
+        }
+      ]
+    },
+    {
+      "id": "columbia-wellness",
+      "title": "STEM Wellness Program Design",
+      "cardImage": "/images/columbia-wellness-cover.jpg",
+      "projectType": "Learning & Development",
+      "types": [
+        "Learning & Development",
+        "Program Design",
+        "Wellness Education"
+      ],
+      "overview": "A student-centered wellness initiative translating mental health needs into accessible programs, community-led workshops, event proposals, and execution plans.",
+      "audience": "**Columbia Engineering students** seeking accessible wellness support, stress-management resources, and community-based programming.",
+      "challenge": "Students needed **engaging and approachable wellness experiences** that fit into a busy academic environment.",
+      "solution": "Designed and supported **wellness workshops, campaigns, newsletters, and events** to promote mental health, connection, and self-care across campus.",
+      "process": {
+        "needsAnalysis": "Assessed student wellness needs and communication gaps.",
+        "learningObjectives": "Created student-centered workshop and campaign concepts.",
+        "designDevelopment": "Developed newsletters, visual assets, and event materials.",
+        "implementation": "Refined outreach and programming based on feedback."
+      },
+      "deliverables": [
+        "Instagram Campaign",
+        "Wellness Newsletter",
+        "Event Proposal",
+        "Wellness Website",
+        "Workshop Materials"
+      ],
+      "tools": [
+        "Figma",
+        "Canva",
+        "Google Workspace"
+      ],
+      "impact": "",
+      "skillsDemonstrated": [
+        "Workshop Design",
+        "Facilitation",
+        "Needs Analysis"
+      ],
+      "skills": [
+        "Workshop Design",
+        "Facilitation",
+        "Needs Analysis"
+      ],
+      "timeline": "September 2025 –Present",
+      "outcomeMetric": "33% Growth",
+      "metricsList": [
+        {
+          "value": "+33%",
+          "label": "Attendance Growth"
+        },
+        {
+          "value": "400+",
+          "label": "Engaged Students"
+        },
+        {
+          "value": "100%",
+          "label": "Program Viability"
+        }
+      ],
+      "displayPlaceholders": [
+        {
+          "title": "Wellness Website",
+          "description": "",
+          "icon": "Sliders",
+          "imageUrl": "/images/columbia-wellness-display-01.png",
+          "externalUrl": "https://wellness.engineering.columbia.edu/"
+        },
+        {
+          "title": "Wellness Newsletter",
+          "description": "",
+          "icon": "BookOpen",
+          "imageUrl": "/images/columbia-wellness-display-02.png",
+          "externalUrl": "https://wellness.engineering.columbia.edu/content/wellness-newsletter-0"
+        },
+        {
+          "title": "Wellness Campaign",
+          "description": "",
+          "icon": "Image",
+          "imageUrl": "/images/columbia-wellness-display-03.png",
+          "externalUrl": "https://drive.google.com/file/d/1FduJXN6iAAn505xhaWwZu6h0WC6tNRZE/view?usp=sharing"
+        }
+      ]
+    },
+    {
+      "id": "comma-reading",
+      "title": "Digital Reading Pathway for ESL Learners",
+      "cardImage": "/images/comma-reading-cover.jpg",
+      "projectType": "Instructional Design",
+      "types": [
+        "Instructional Design",
+        "eLearning",
+        "Curriculum Design"
+      ],
+      "overview": "A structured learning pathway that makes English articles more accessible through guided, step-by-step reading experiences.",
+      "audience": "**ESL learners ** building vocabulary, comprehension, and reading confidence.",
+      "challenge": "Learners struggled with **complex articles, unfamiliar vocabulary, and limited reading confidence**.",
+      "solution": "Transformed traditional reading materials into **guided digital learning pathways** with curated articles, vocabulary support, comprehension tasks, and **interactive LMS activities**.",
+      "process": {
+        "needsAnalysis": "Identified ESL learners’ reading challenges and support needs.",
+        "learningObjectives": "Curated articles and structured them into guided reading pathways.",
+        "designDevelopment": "Built learner-facing LMS modules with reading activities and clear instructions.",
+        "implementation": "Refined article selection, pathway structure, and activity instructions based on learner engagement."
+      },
+      "deliverables": [
+        "Digital Reading Pathway",
+        "LMS Learning Modules",
+        "Competitive Product Analysis Report",
+        "LMS Book Data Audit & Entry"
+      ],
+      "tools": [
+        "Figma",
+        "LMS Platform",
+        "Microsoft 365"
+      ],
+      "impact": "Identified ESL learners’ reading challenges and support needs.",
+      "skillsDemonstrated": [
+        "LMS",
+        "ADDIE",
+        "Needs Analysis",
+        "Learning Evaluation"
+      ],
+      "skills": [
+        "LMS",
+        "ADDIE",
+        "Needs Analysis",
+        "Learning Evaluation"
+      ],
+      "timeline": "2024",
+      "outcomeMetric": "+18% Reading Engagement",
+      "metricsList": [
+        {
+          "value": "20k+",
+          "label": "Engaged Learners"
+        },
+        {
+          "value": "+18%",
+          "label": "Reading Engagement"
+        },
+        {
+          "value": "15+",
+          "label": "Published LMS Learning Modules"
+        }
+      ],
+      "displayPlaceholders": [
+        {
+          "title": "Digital Reading Pathway",
+          "description": "Interaction Highlight",
+          "icon": "Tablet",
+          "imageUrl": "/images/comma-reading-display-01.jpg",
+          "externalUrl": "https://drive.google.com/file/d/1m8jiAhb22lf9qM5Iedx5Aj8yYKDcpQ37/view?usp=drive_link"
+        },
+        {
+          "title": "LMS Learning Modules ",
+          "description": "Vocabulary Interaction Highlight",
+          "icon": "Volume2",
+          "imageUrl": "/images/comma-reading-display-02.jpg",
+          "externalUrl": "https://drive.google.com/file/d/1kwQbwupMBP8yaYdlJXbGyAJJJZ89wMdO/view?usp=drive_link"
+        },
+        {
+          "title": "LMS Learning Modules ",
+          "description": "Gamified Quiz Highlight",
+          "icon": "Map",
+          "imageUrl": "/images/comma-reading-display-03.jpg",
+          "externalUrl": "https://drive.google.com/file/d/1US7c4rBs0nGF4-gN2ABGeNOfrfbUpV2W/view?usp=drive_link"
+        }
+      ]
+    },
+    {
+      "id": "mentor-promise",
+      "title": "Art-based Social-Emotional Learning Curriculum",
+      "cardImage": "/images/mentor-promise-cover.jpg",
+      "projectType": "Instructional Design",
+      "types": [
+        "Instructional Design",
+        "Curriculum Design"
+      ],
+      "overview": "A social-emotional coaching curriculum and highly artistic mentor-training handbook developed to support developmental conversations for high-risk youth.",
+      "audience": "**K–12 students** learning emotional awareness, self-expression, empathy, and peer relationship skills.",
+      "challenge": "SEL concepts can feel **abstract **when taught through traditional instruction alone.",
+      "solution": "Designed an **art-based SEL** course with drawing, reflection, and discussion activities.",
+      "process": {
+        "needsAnalysis": "Identified student SEL needs around emotional awareness, self-expression, empathy, and peer relationships.",
+        "learningObjectives": "Created lesson themes, art prompts, reflection questions, and discussion activities.",
+        "designDevelopment": "Facilitated interactive SEL lessons with mentors and supported student reflection.",
+        "implementation": "Adjusted content and activities for different student populations."
+      },
+      "deliverables": [
+        "Lesson Plan",
+        "Lesson Slide",
+        "Facilitation Guide"
+      ],
+      "tools": [
+        "Google Workspace",
+        "Canva"
+      ],
+      "impact": "",
+      "skillsDemonstrated": [
+        "Facilitation",
+        "Learning Evaluation"
+      ],
+      "skills": [
+        "Facilitation",
+        "Learning Evaluation"
+      ],
+      "timeline": "September 2025 - June 2026",
+      "outcomeMetric": "100% Confident",
+      "metricsList": [
+        {
+          "value": "10",
+          "label": "Lessons Designed"
+        },
+        {
+          "value": "+12%",
+          "label": "Student Engagement"
+        },
+        {
+          "value": "2",
+          "label": "School Launches"
+        }
+      ],
+      "displayPlaceholders": [
+        {
+          "title": "Lesson Plan",
+          "description": "Sample #1",
+          "icon": "GitMerge",
+          "imageUrl": "/images/mentor-promise-display-01.jpg",
+          "externalUrl": "https://drive.google.com/file/d/15ImkIzT4ydpGzfMS3yglPUFgMg8iq-gY/view?usp=sharing"
+        },
+        {
+          "title": "Lesson Slide",
+          "description": "Sample #2",
+          "icon": "PenTool",
+          "imageUrl": "/images/mentor-promise-display-02.jpg",
+          "externalUrl": "https://drive.google.com/file/d/1qJPHEFzNwZ0s9MFBFBQZTxExXjjwLWXL/view?usp=sharing"
+        },
+        {
+          "title": "Lesson Template",
+          "description": "Sample #3",
+          "icon": "HelpCircle",
+          "imageUrl": "/images/mentor-promise-display-03.jpg",
+          "externalUrl": "https://drive.google.com/file/d/1NeXdd25IrxmU04F4N5-U_4YWafDS1-d-/view?usp=drive_link"
         }
       ]
     }
   ],
-  "playgroundProjects": {},
+  "playgroundProjects": {
+    "teajourney": {
+      "title": "Tea Journey",
+      "tagline": "Ancient Rituals, Modern Practice",
+      "overview": "An interactive cultural learning experience that combines guided brewing simulations, storytelling, and cultural history to make Chinese tea traditions accessible, engaging, and memorable.",
+      "skills": [
+        "Instructional Design",
+        "eLearning",
+        "Graphic Design",
+        "Gamification",
+        "Prototyping"
+      ],
+      "demoUrl": "https://your-tea-journey.vercel.app/"
+    },
+    "lumipal": {
+      "title": "Lumipal",
+      "tagline": "A Mindful Companion for Daily Emotional Balance",
+      "overview": "A gentle mental wellness companion that helps users track moods, practice guided mindfulness, build healthy habits, and enjoy ambient soundscapes.",
+      "skills": [
+        "Wellness Tech",
+        "Gamified Reflection",
+        "Interactive Audio",
+        "Micro-Learning"
+      ],
+      "demoUrl": "https://lumipal.vercel.app/"
+    },
+    "tarot-odyssey": {
+      "title": "Tarot Odyssey",
+      "tagline": "Introspective Learning & Archetypal Storytelling",
+      "overview": "A reflective interactive learning exploration combining tarot archetypes with psychological introspection and guided mindfulness routines.",
+      "skills": [
+        "Storytelling",
+        "Reflective Journaling",
+        "Visual Aesthetics",
+        "Interactive Learning"
+      ],
+      "demoUrl": "https://tarot-odyssey.vercel.app/"
+    },
+    "pawgress": {
+      "title": "Pawgress",
+      "tagline": "Pet-Powered Habit Progression & Daily Rituals",
+      "overview": "A gamified micro-habit tracker that uses pet care mechanics to motivate sustainable habit formation and mindful productivity.",
+      "skills": [
+        "Gamification",
+        "Habit Formation",
+        "Behavioral Design",
+        "Micro-Learning"
+      ],
+      "demoUrl": "https://pawgress.vercel.app/"
+    }
+  },
   "playgroundLogos": {},
   "playgroundGalleries": {},
-  "philosophies": [],
-  "cv": null
+  "philosophies": [
+    {
+      "id": "phil-1",
+      "title": "Learners First",
+      "desc": "Learning should be designed around the needs, motivations, and experiences of learners—not around content alone. I strive to create experiences that are relevant, accessible, and meaningful, helping learners build confidence as they progress.",
+      "iconName": "Brain"
+    },
+    {
+      "id": "phil-2",
+      "title": "Learning Through Engagement",
+      "desc": "People learn best when they actively participate. I use interaction, storytelling, practice, and reflection to transform passive information into engaging learning experiences that encourage exploration and retention.",
+      "iconName": "Sparkles"
+    },
+    {
+      "id": "phil-3",
+      "title": "From Knowledge to Action",
+      "desc": "Learning is most valuable when it leads to real-world application. I design experiences that help learners not only understand concepts, but also apply skills, solve problems, and perform effectively in authentic contexts.",
+      "iconName": "Award"
+    }
+  ],
+  "cv": {
+    "experiences": [
+      {
+        "id": "langley-lnd",
+        "role": "Learning & Development Intern",
+        "organization": "Langley Federal Credit Union",
+        "location": "Newport News, VA",
+        "period": "June 2026 – Present",
+        "description": "Assessed Financial Service Representatives learning needs and gaps to design a structured learning pathway with targeted onboarding and continuous development recommendations.",
+        "caseStudyId": "fsr-product-knowledge"
+      },
+      {
+        "id": "mentor-a-promise",
+        "role": "Curriculum Designer Intern",
+        "organization": "Mentor A Promise",
+        "location": "New York, NY",
+        "period": "September 2025 – Present",
+        "description": "Designed and implemented SEL and arts-based instructional modules using the ADDIE framework to scaffold youth reflection and emotional articulation.",
+        "caseStudyId": "mentor-promise"
+      },
+      {
+        "id": "columbia-climate",
+        "role": "Digital Learning & Course Design Assistant",
+        "organization": "Columbia Climate School",
+        "location": "New York, NY",
+        "period": "September 2025 – Present",
+        "description": "Collaborated with instructional teams to develop digital course materials, multimedia resources, and online learning modules for climate science education."
+      },
+      {
+        "id": "columbia-wellness",
+        "role": "Engineering Wellness Education Content Designer",
+        "organization": "Columbia University",
+        "location": "New York, NY",
+        "period": "September 2025 – Present",
+        "description": "Designed multimedia educational campaigns and facilitated interactive workshops for 300+ students using experiential and scenario-based learning strategies.",
+        "caseStudyId": "columbia-wellness"
+      },
+      {
+        "id": "comma-reading",
+        "role": "Instructional Designer Intern",
+        "organization": "Comma Reading",
+        "location": "Shanghai, China",
+        "period": "June 2025 – August 2025",
+        "description": "Conducted learner and usability analysis to develop 200+ multimodal learning resources and Figma prototypes across LMS modules.",
+        "caseStudyId": "comma-reading"
+      }
+    ],
+    "education": [
+      {
+        "id": "columbia-masters",
+        "degree": "M.A. in Instructional Technology and Media",
+        "institution": "Teachers College, Columbia University",
+        "location": "New York, NY",
+        "period": "September 2025 – Present",
+        "gpa": "GPA: 4.00/4.00",
+        "coursework": [
+          "Instructional Design of Ed Technology",
+          "Theory & Programming: Interactive Media",
+          "Introduction to Educational Technology & Learning Sciences",
+          "Design for Play and Learning",
+          "How Adults Learn"
+        ]
+      },
+      {
+        "id": "richmond-bachelors",
+        "degree": "B.A. in Psychology & Cognitive Science",
+        "institution": "University of Richmond",
+        "location": "Richmond, VA",
+        "period": "August 2021 – May 2025",
+        "gpa": "GPA: 3.94/4.00",
+        "coursework": [
+          "Cognitive Science",
+          "Child Development",
+          "Statistics",
+          "Psycholinguistics"
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "id": "id-theory",
+        "category": "Instructional Design & Theory",
+        "items": [
+          "Instructional Design Models (ADDIE, SAM, UbD)",
+          "Cognitive Load & Learning Theory",
+          "Needs Analysis & Thematic Analysis"
+        ]
+      },
+      {
+        "id": "authoring-tools",
+        "category": "Authoring & Design Tools",
+        "items": [
+          "Articulate 360 (Storyline & Rise)",
+          "Figma",
+          "Canva"
+        ]
+      },
+      {
+        "id": "lms-standards",
+        "category": "LMS, EdTech & Standards",
+        "items": [
+          "Canvas & Blackboard LMS",
+          "SCORM & xAPI",
+          "Google Workspace",
+          "Microsoft 365"
+        ]
+      },
+      {
+        "id": "proto-languages",
+        "category": "Prototyping & Languages",
+        "items": [
+          "HTML, CSS & JavaScript",
+          "Google AI Studio",
+          "VS Code"
+        ]
+      }
+    ],
+    "resumePdf": "/images/Katie_Hong_CV.pdf"
+  }
 }

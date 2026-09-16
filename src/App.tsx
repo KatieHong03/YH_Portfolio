@@ -13,6 +13,7 @@ import ConnectModal from './components/ConnectModal';
 import PortfolioGuide from './components/PortfolioGuide';
 import { initAuthListener } from './services/authService';
 import { 
+  initPortfolioData,
   fetchProjects, 
   fetchPlaygroundData, 
   fetchAboutContent, 
@@ -27,16 +28,13 @@ export default function App() {
   // Initialize Auth & fetch cloud database content on mount
   useEffect(() => {
     initAuthListener();
-    fetchProjects()
+    initPortfolioData(true)
       .then(() => {
         window.dispatchEvent(new CustomEvent('portfolio_projects_data_updated'));
       })
-      .catch((e) => console.warn('Fetch projects error:', e));
-    fetchPlaygroundData()
-      .then(() => {
-        window.dispatchEvent(new CustomEvent('portfolio_playground_updated'));
-      })
-      .catch((e) => console.warn('Fetch playground error:', e));
+      .catch((e) => console.warn('Init portfolio data error:', e));
+    fetchProjects().catch((e) => console.warn('Fetch projects error:', e));
+    fetchPlaygroundData().catch((e) => console.warn('Fetch playground error:', e));
     fetchAboutContent().catch((e) => console.warn('Fetch about error:', e));
     fetchCVContent().catch((e) => console.warn('Fetch cv error:', e));
   }, []);

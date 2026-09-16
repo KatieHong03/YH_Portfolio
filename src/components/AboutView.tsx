@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getCachedAboutContent, saveAboutContent } from '../services/portfolioService';
 import { subscribeToAuth } from '../services/authService';
@@ -71,10 +71,30 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
   const [activeSection, setActiveSection] = useState<'all' | 'philosophy' | 'journey' | 'pursuits'>('all');
   const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
   const [flippedCards, setFlippedCards] = useState<Record<number, boolean>>({});
+  const dismissedOnHoverRef = useRef<Record<number, boolean>>({});
 
   // Reset scroll to top instantly on mount
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  }, []);
+
+  // Typewriter effect for hero headline
+  const [typedChars, setTypedChars] = useState<number>(0);
+  const fullHeadline = "Bridging complexity & understanding through thoughtful learning design.";
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      let current = 0;
+      const interval = setInterval(() => {
+        current += 1;
+        setTypedChars(current);
+        if (current >= fullHeadline.length) {
+          clearInterval(interval);
+        }
+      }, 32);
+      return () => clearInterval(interval);
+    }, 250);
+    return () => clearTimeout(timer);
   }, []);
 
   // Admin Mode
@@ -199,24 +219,61 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-        className="relative overflow-hidden bg-white rounded-[2.5rem] border border-brand-border p-8 sm:p-12 md:p-14 lg:p-16 shadow-xs min-h-[70vh] flex flex-col justify-center"
+        className="relative overflow-hidden bg-white rounded-[2.5rem] border border-brand-border/90 px-8 sm:px-12 md:px-14 lg:px-16 py-8 sm:py-9 md:py-10 lg:py-11 shadow-xs min-h-[58vh] flex flex-col justify-center"
       >
-        {/* Soft background ambient light */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#EAEFE9]/40 via-brand-peach/10 to-brand-lavender/15 rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-brand-sage/5 to-transparent rounded-full blur-2xl -ml-20 -mb-20 pointer-events-none" />
+        {/* Optional Custom User Uploaded Hero Background */}
+        <img
+          src="/images/hero-bg.jpg"
+          alt=""
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            const img = e.currentTarget;
+            if (img.src.endsWith('.jpg')) {
+              img.src = '/images/hero-bg.png';
+            } else {
+              img.style.display = 'none';
+            }
+          }}
+          className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-0 opacity-80"
+        />
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center relative z-10">
           <div className="lg:col-span-7 space-y-6 sm:space-y-7">
-            {/* Animated Large Display Headline without background boxes */}
+            {/* Animated Large Display Headline with Typewriter Effect */}
             <motion.div 
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             >
-              <h1 className="font-serif text-3xl sm:text-5xl md:text-5.5xl lg:text-6xl xl:text-[66px] leading-[1.18] sm:leading-[1.14] text-brand-text tracking-tight font-normal">
-                Bridging <span className="italic font-serif text-brand-sage">complexity & understanding</span> through thoughtful learning design.
-              </h1>
+              {(() => {
+                const part1 = "Bridging ";
+                const part2 = "complexity & understanding";
+                const part3 = " through thoughtful learning design.";
+                const len1 = part1.length;
+                const len2 = len1 + part2.length;
+                const len3 = fullHeadline.length;
+
+                const text1 = fullHeadline.slice(0, Math.min(typedChars, len1));
+                const text2 = typedChars > len1 ? fullHeadline.slice(len1, Math.min(typedChars, len2)) : "";
+                const text3 = typedChars > len2 ? fullHeadline.slice(len2, Math.min(typedChars, len3)) : "";
+                const isTyping = typedChars < fullHeadline.length;
+
+                return (
+                  <h1 className="font-serif text-3xl sm:text-5xl md:text-5.5xl lg:text-6xl xl:text-[66px] leading-[1.18] sm:leading-[1.14] text-brand-text tracking-tight font-normal min-h-[2.4em] sm:min-h-[2.3em]">
+                    {text1}
+                    {text2 && (
+                      <span className="italic font-serif text-[#1C1A17] font-medium">
+                        {text2}
+                      </span>
+                    )}
+                    {text3}
+                    {isTyping && (
+                      <span className="inline-block w-[3px] h-[0.88em] bg-brand-text align-baseline ml-1 animate-pulse" />
+                    )}
+                  </h1>
+                );
+              })()}
             </motion.div>
 
             {/* Subtext description with delayed fade-in */}
@@ -282,7 +339,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
             </motion.div>
           </div>
 
-          {/* Floating Focus & Exploration Card with soft ambient animation */}
+          {/* Floating Focus & Exploration Card with calm presentation */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.92, y: 28 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -290,17 +347,12 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
             transition={{ duration: 0.75, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-5 relative flex justify-center items-center py-4"
           >
-            {/* Background rotated card accent */}
-            <div className="w-[290px] h-[290px] sm:w-[330px] sm:h-[330px] md:w-[360px] md:h-[360px] bg-brand-blue rounded-[44px] rotate-6 absolute -z-10 opacity-20 transition-all duration-500"></div>
-            
-            {/* Main Interactive Floating Focus Card */}
-            <motion.div 
-              whileHover={{ y: -4, rotate: -0.5 }}
-              transition={{ duration: 0.3 }}
+            {/* Main Floating Focus Card (removed underneath blue accent layer) */}
+            <div 
               className="w-[290px] h-[290px] sm:w-[330px] sm:h-[330px] md:w-[360px] md:h-[360px] bg-white rounded-[36px] shadow-xl p-7 sm:p-8 flex flex-col justify-between border border-brand-border/70 relative z-10 backdrop-blur-xs"
             >
               <div className="flex justify-between items-center pb-3 border-b border-brand-border/40">
-                <span className="text-[11px] font-mono tracking-wider text-brand-muted uppercase font-semibold">Focus & Exploration</span>
+                <span className="text-xs sm:text-sm font-mono tracking-wider text-brand-muted uppercase font-semibold">Focus & Exploration</span>
                 <div className="flex gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-brand-border"></div>
                   <div className="w-2 h-2 rounded-full bg-brand-border"></div>
@@ -309,12 +361,12 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
               </div>
               
               <div className="flex-1 flex flex-col justify-center py-4">
-                <span className="text-[11px] uppercase tracking-widest font-bold text-brand-sage block mb-3.5 font-mono">Currently Exploring</span>
+                <span className="text-[13px] sm:text-sm md:text-[15px] uppercase tracking-wider font-bold text-brand-sage block mb-3.5 font-mono">Currently Exploring</span>
                 <ul className="space-y-3">
                   {['AI Literacy & Workforce Learning', 'Adaptive Learning Experiences', 'Learning Analytics', 'Scenario-Based eLearning'].map((item, idx) => (
                     <motion.li 
                       key={idx}
-                      initial={{ opacity: 0, x: -6 }}
+                      initial={{ opacity: 0, x: -8 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: 0.5 + idx * 0.1, duration: 0.4 }}
@@ -326,7 +378,7 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   ))}
                 </ul>
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         </div>
       </motion.section>
@@ -382,68 +434,91 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-30px" }}
                   transition={{ duration: 0.65, delay: idx * 0.12, ease: [0.16, 1, 0.3, 1] }}
-                  className="group [perspective:1000px] h-[280px] sm:h-[300px] w-full cursor-pointer relative"
+                  className="group [perspective:1000px] h-[280px] sm:h-[300px] w-full cursor-pointer relative select-none"
+                  onMouseEnter={() => {
+                    if (!dismissedOnHoverRef.current[idx]) {
+                      setFlippedCards(prev => ({
+                        ...prev,
+                        [idx]: true
+                      }));
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    dismissedOnHoverRef.current[idx] = false;
+                  }}
                   onClick={() => {
-                    setFlippedCards(prev => ({
-                      ...prev,
-                      [idx]: !prev[idx]
-                    }));
+                    setFlippedCards(prev => {
+                      const currentlyFlipped = !!prev[idx];
+                      if (currentlyFlipped) {
+                        dismissedOnHoverRef.current[idx] = true;
+                        return { ...prev, [idx]: false };
+                      } else {
+                        dismissedOnHoverRef.current[idx] = false;
+                        return { ...prev, [idx]: true };
+                      }
+                    });
                   }}
                 >
                   <div 
                     className={`relative w-full h-full duration-500 [transform-style:preserve-3d] transition-transform ${
-                      isFlipped ? '[transform:rotateY(180deg)]' : 'group-hover:[transform:rotateY(180deg)]'
+                      isFlipped ? '[transform:rotateY(180deg)]' : ''
                     }`}
                   >
                     
                     {/* FRONT SIDE */}
-                    <div className="absolute inset-0 w-full h-full bg-white rounded-2xl border border-brand-border p-6 sm:p-7 flex flex-col justify-between [backface-visibility:hidden] shadow-xs hover:shadow-md transition-all duration-300">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono text-[10.5px] uppercase tracking-widest text-brand-muted font-bold bg-[#FAF8F4] px-2.5 py-1 rounded-full border border-brand-border/60">
-                            Pillar 0{idx + 1}
-                          </span>
-                          {isAdminMode && (
-                            <div className="flex items-center gap-1 bg-white/90 border border-brand-border px-1.5 py-0.5 rounded-lg shadow-xs" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                onClick={(e) => handleOpenEditPhil(philosophy, e)}
-                                className="p-1 text-brand-sage hover:bg-brand-sage/10 rounded transition-colors cursor-pointer"
-                                title="Edit pillar"
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={(e) => handleDeletePhil(philosophy.id, e)}
-                                className="p-1 text-[#9C5A4C] hover:bg-[#9C5A4C]/10 rounded transition-colors cursor-pointer"
-                                title="Delete pillar"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          )}
+                    <div className="absolute inset-0 w-full h-full bg-white rounded-2xl border border-brand-border p-6 sm:p-7 flex flex-col justify-between [backface-visibility:hidden] shadow-xs hover:shadow-md transition-all duration-300 relative">
+                      {isAdminMode && (
+                        <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1 bg-white/95 border border-brand-border px-1.5 py-0.5 rounded-lg shadow-xs" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={(e) => handleOpenEditPhil(philosophy, e)}
+                            className="p-1 text-brand-sage hover:bg-brand-sage/10 rounded transition-colors cursor-pointer"
+                            title="Edit pillar"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => handleDeletePhil(philosophy.id, e)}
+                            className="p-1 text-[#9C5A4C] hover:bg-[#9C5A4C]/10 rounded transition-colors cursor-pointer"
+                            title="Delete pillar"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                        <div className="pt-2">
-                          <h4 className="font-serif font-bold text-2xl sm:text-[26px] md:text-[28px] text-brand-text leading-[1.22] tracking-tight group-hover:text-brand-peach transition-colors duration-300">
-                            {philosophy.title}
-                          </h4>
-                        </div>
+                      )}
+
+                      {/* Centered Pillar and Title in the middle of the box */}
+                      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3 px-2">
+                        <span className="inline-block font-mono text-[11px] uppercase tracking-widest text-brand-muted font-bold bg-[#FAF8F4] px-3 py-1 rounded-full border border-brand-border/60">
+                          Pillar 0{idx + 1}
+                        </span>
+                        <h4 className="font-serif font-bold text-2xl sm:text-[26px] md:text-[28px] text-brand-text leading-[1.22] tracking-tight group-hover:text-brand-peach transition-colors duration-300 max-w-[260px]">
+                          {philosophy.title}
+                        </h4>
                       </div>
                       
                       <div className="pt-3 border-t border-brand-border/50 flex items-center justify-between text-xs font-mono text-[#4F4A45]">
                         <span className="flex items-center gap-1.5 font-bold transition-colors group-hover:text-brand-sage duration-300 text-[11px]">
                           <span className="w-1.5 h-1.5 rounded-full bg-brand-sage animate-pulse shrink-0" />
-                          Tap / Hover to reveal
+                          Hover to reveal &bull; Click to flip
                         </span>
                         <Bookmark className="w-3.5 h-3.5 text-brand-text/60 group-hover:text-brand-sage transition-colors duration-300 shrink-0" />
                       </div>
                     </div>
 
                     {/* BACK SIDE */}
-                    <div className={`absolute inset-0 w-full h-full ${backBgColor} rounded-2xl p-6 sm:p-8 flex items-center justify-center [transform:rotateY(180deg)] [backface-visibility:hidden] text-white shadow-md`}>
-                      <div className="overflow-y-auto max-h-full py-1">
-                        <p className="font-sans text-sm sm:text-[15px] text-white leading-relaxed font-normal">
+                    <div className={`absolute inset-0 w-full h-full ${backBgColor} rounded-2xl p-6 sm:p-7 md:p-8 flex flex-col justify-between [transform:rotateY(180deg)] [backface-visibility:hidden] text-white shadow-md`}>
+                      <div className="overflow-y-auto max-h-full py-1 text-center sm:text-left">
+                        <p className="font-sans text-base sm:text-[17px] md:text-[18px] text-white leading-relaxed font-medium">
                           {philosophy.desc}
                         </p>
+                      </div>
+                      <div className="pt-3 border-t border-white/20 flex items-center justify-between text-xs font-mono text-white/90">
+                        <span className="flex items-center gap-1.5 text-[11px] font-medium tracking-wide">
+                          <RotateCcw className="w-3 h-3" /> Click anywhere to resume front
+                        </span>
+                        <span className="text-[10px] uppercase tracking-wider opacity-75 font-bold">
+                          0{idx + 1}
+                        </span>
                       </div>
                     </div>
 
@@ -467,9 +542,6 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
             <Globe className="w-4 h-4 text-brand-blue" />
             <h2 className="font-serif font-bold text-xl text-brand-text">Background & Creative Disciplines</h2>
           </div>
-          <span className="font-sans text-[11px] sm:text-xs tracking-wider text-[#68635B] bg-white/40 px-3 py-0.5 rounded-[7px] border border-[#DDD7CD] uppercase font-normal">
-            Personal Journey
-          </span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
@@ -487,12 +559,12 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
                   </h3>
                   
                   <div 
-                    className="aspect-square w-full rounded-2xl overflow-hidden border border-brand-border/60 shadow-inner bg-brand-bg relative group/photo"
+                    className="aspect-square w-full rounded-2xl overflow-hidden border border-brand-border/60 shadow-inner bg-brand-bg relative"
                   >
                     <img 
                       src="/images/self-photo.jpg" 
                       alt="Yuting (Katie) Hong Portrait" 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover/photo:scale-105"
+                      className="w-full h-full object-cover"
                       onLoad={() => setImagesLoaded(prev => ({ ...prev, self: true }))}
                       onError={(e) => {
                         e.currentTarget.style.opacity = '0';

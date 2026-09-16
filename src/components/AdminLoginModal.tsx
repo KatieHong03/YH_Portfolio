@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Lock, X, CheckCircle2, AlertCircle, ShieldCheck, Mail, Key } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Lock, X, AlertCircle, ShieldCheck, Key } from 'lucide-react';
 import { loginAdminWithPassword } from '../services/authService';
-import { isSupabaseConfigured } from '../lib/supabase';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -15,8 +14,6 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
   onClose,
   onLoginSuccess
 }) => {
-  const isCloud = isSupabaseConfigured();
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,20 +26,17 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
     setIsLoading(true);
 
     try {
-      // If cloud is configured and email is empty, default or ask for email
-      const submitEmail = email.trim() || 'admin@katiehong.com';
-      const res = await loginAdminWithPassword(submitEmail, password);
+      const res = await loginAdminWithPassword('', password);
 
       if (res.success) {
         onLoginSuccess();
         onClose();
         setPassword('');
-        setEmail('');
       } else {
-        setError(res.error || 'Authentication failed. Please check your credentials.');
+        setError(res.error || 'Authentication failed. Please check your password.');
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected authentication error occurred.');
+      setError(err.message || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -91,27 +85,6 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
               <Key className="w-3.5 h-3.5 text-brand-muted absolute left-2.5 top-2.5" />
             </div>
           </div>
-
-          {isCloud && (
-            <div className="space-y-1 pt-1">
-              <div className="flex items-center justify-between">
-                <label className="font-mono text-[9px] uppercase tracking-wider text-brand-muted font-medium block">
-                  Cloud Admin Email (Optional)
-                </label>
-                <span className="text-[9px] text-brand-muted font-mono">For Supabase Auth</span>
-              </div>
-              <div className="relative">
-                <input
-                  type="email"
-                  placeholder="admin@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 text-xs font-sans text-brand-text bg-white border border-brand-border/70 rounded-xl focus:outline-hidden focus:border-brand-sage pl-8"
-                />
-                <Mail className="w-3.5 h-3.5 text-brand-muted absolute left-2.5 top-2.5" />
-              </div>
-            </div>
-          )}
 
           {error && (
             <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-xs text-red-700">

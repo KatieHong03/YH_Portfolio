@@ -5,7 +5,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CaseStudyView } from './CaseStudyView';
-import { AdminSyncModal } from './AdminSyncModal';
 import { AdminLoginModal } from './AdminLoginModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { compressImageFile, safeLocalStorageSet } from '../utils/imageCompressor';
@@ -63,15 +62,8 @@ import {
   Camera,
   Trash2,
   CloudUpload,
-  Image as ImageIcon,
-  Eye,
-  EyeOff
+  Image as ImageIcon
 } from 'lucide-react';
-import { 
-  isPreviewCloudImagesOnly, 
-  setPreviewCloudImagesOnly, 
-  EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED 
-} from '../services/imageMigrationService';
 
 export type { Project };
 export const PROJECTS = CANONICAL_PROJECTS;
@@ -287,21 +279,10 @@ export default function WorkView() {
     return unsub;
   }, []);
 
-  const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
-  const [syncModalTab, setSyncModalTab] = useState<'images' | 'migrate' | 'config' | 'sql'>('images');
-  const [previewCloudOnly, setPreviewCloudOnly] = useState<boolean>(() => isPreviewCloudImagesOnly());
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-
-  useEffect(() => {
-    const handleCloudToggle = () => {
-      setPreviewCloudOnly(isPreviewCloudImagesOnly());
-    };
-    window.addEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, handleCloudToggle);
-    return () => {
-      window.removeEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, handleCloudToggle);
-    };
-  }, []);
 
   // Form states
   const [editTitle, setEditTitle] = useState('');
@@ -571,25 +552,7 @@ export default function WorkView() {
     }
   };
 
-  const handleCoverFileUpload = async (projectId: string, file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file (PNG, JPG, WEBP, etc.)');
-      return;
-    }
-    try {
-      const cloudUrl = await uploadMediaToCloud(file, `${projectId}-cover`);
-      handleUpdateCoverImage(projectId, cloudUrl);
-    } catch (e) {
-      console.warn('Direct upload failed, compressing locally:', e);
-      try {
-        const compressed = await compressImageFile(file, 1400, 1000, 0.85);
-        handleUpdateCoverImage(projectId, compressed);
-      } catch (err) {
-        console.error('Failed to process cover image:', err);
-      }
-    }
-  };
-
+  // Image uploads disabled in admin mode - projects use static assets in public/images/
   const handleUpdateDisplayImage = (projectId: string, placeholderIdx: number, newImageUrl: string) => {
     const updatedProjects = projects.map((p) => {
       if (p.id === projectId) {
@@ -775,40 +738,6 @@ export default function WorkView() {
 
   return (
     <div className="space-y-12 animate-fadeIn pb-20">
-      {/* Preview Cloud Images Active Banner */}
-      {previewCloudOnly && (
-        <div className="p-4 bg-emerald-50/95 border border-emerald-300 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-emerald-950 shadow-sm animate-fadeIn">
-          <div className="flex items-center gap-2.5">
-            <span className="p-1.5 rounded-lg bg-emerald-600 text-white shrink-0">
-              <Eye className="w-4 h-4" />
-            </span>
-            <div className="space-y-0.5">
-              <span className="font-bold block">Previewing Cloud Images Only (Testing Public Vercel View)</span>
-              <p className="text-[11px] text-emerald-800/80 font-sans">
-                Local browser image overrides are bypassed. All projects and playground galleries render strictly from Supabase.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => {
-                setSyncModalTab('images');
-                setShowSyncModal(true);
-              }}
-              className="px-3 py-1.5 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl font-bold text-xs transition-colors cursor-pointer"
-            >
-              Open Image Migrator
-            </button>
-            <button
-              onClick={() => setPreviewCloudImagesOnly(false)}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer"
-            >
-              Exit Preview Mode
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Title Header Block */}
       <motion.section 
         initial={{ opacity: 0, y: 24 }}
@@ -822,9 +751,10 @@ export default function WorkView() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="font-serif italic font-bold text-4xl sm:text-5xl md:text-6xl text-brand-text tracking-tight mt-2"
+          className="font-serif font-bold text-4xl sm:text-5xl md:text-6xl text-brand-text tracking-tight mt-2 flex items-center justify-center flex-wrap"
         >
-          Featured <span className="text-brand-sage not-italic font-normal">Work</span>
+          <span className="italic mr-3.5 sm:mr-4.5">Featured</span>
+          <span className="text-brand-sage font-normal">Work</span>
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0, y: 14 }}
@@ -1192,8 +1122,35 @@ export default function WorkView() {
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                         onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const parent = e.currentTarget.parentElement;
+                          const target = e.currentTarget;
+                          const currentSrc = target.src;
+                          if (currentSrc.endsWith('.jpg') && !target.dataset.triedPng) {
+                            target.dataset.triedPng = 'true';
+                            target.src = currentSrc.slice(0, -4) + '.png';
+                            return;
+                          }
+                          if (currentSrc.endsWith('.png') && !target.dataset.triedJpg) {
+                            target.dataset.triedJpg = 'true';
+                            target.src = currentSrc.slice(0, -4) + '.jpg';
+                            return;
+                          }
+                          if (currentSrc.includes('fsr-product-knowledge') && !target.dataset.triedPathway) {
+                            target.dataset.triedPathway = 'true';
+                            target.src = currentSrc.replace('fsr-product-knowledge', 'fsr-learning-pathway');
+                            return;
+                          }
+                          if (currentSrc.includes('-cover.jpg') && !target.dataset.triedCover1) {
+                            target.dataset.triedCover1 = 'true';
+                            target.src = currentSrc.replace('-cover.jpg', '-cover-1.jpg');
+                            return;
+                          }
+                          if (currentSrc.includes('-cover-1.jpg') && !target.dataset.triedCover) {
+                            target.dataset.triedCover = 'true';
+                            target.src = currentSrc.replace('-cover-1.jpg', '-cover.jpg');
+                            return;
+                          }
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
                           if (parent && !parent.querySelector('.fallback-box')) {
                             const fallback = document.createElement('div');
                             fallback.className = 'fallback-box w-full h-full bg-brand-bg flex flex-col items-center justify-center p-6 text-center';
@@ -1206,30 +1163,6 @@ export default function WorkView() {
                       <div className="w-full h-full bg-brand-bg flex flex-col items-center justify-center p-6 text-center">
                         <FileText className="w-10 h-10 text-brand-muted/40 mb-2" />
                         <span className="font-serif font-bold text-sm text-brand-text/75 line-clamp-2">{project.title}</span>
-                      </div>
-                    )}
-
-                    {/* Admin Quick Cover Upload Action */}
-                    {isAdminMode && (
-                      <div 
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute bottom-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      >
-                        <label className="bg-black/85 hover:bg-black text-white px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-md backdrop-blur-xs transition-all">
-                          <Camera className="w-3.5 h-3.5 text-brand-sage" /> Change Cover
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                handleCoverFileUpload(project.id, file);
-                              }
-                              e.target.value = '';
-                            }}
-                          />
-                        </label>
                       </div>
                     )}
                   </motion.div>
@@ -1727,7 +1660,24 @@ export default function WorkView() {
                                         alt={ph.title}
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover/ph:scale-[1.03]"
                                         referrerPolicy="no-referrer"
-                                        onError={() => {
+                                        onError={(e) => {
+                                          const target = e.currentTarget;
+                                          const currentSrc = target.src;
+                                          if (currentSrc.endsWith('.jpg') && !target.dataset.triedPng) {
+                                            target.dataset.triedPng = 'true';
+                                            target.src = currentSrc.slice(0, -4) + '.png';
+                                            return;
+                                          }
+                                          if (currentSrc.endsWith('.png') && !target.dataset.triedJpg) {
+                                            target.dataset.triedJpg = 'true';
+                                            target.src = currentSrc.slice(0, -4) + '.jpg';
+                                            return;
+                                          }
+                                          if (currentSrc.includes('fsr-product-knowledge') && !target.dataset.triedPathway) {
+                                            target.dataset.triedPathway = 'true';
+                                            target.src = currentSrc.replace('fsr-product-knowledge', 'fsr-learning-pathway');
+                                            return;
+                                          }
                                           setImageErrors(prev => ({ ...prev, [imgKey]: true }));
                                         }}
                                       />
@@ -1924,7 +1874,7 @@ export default function WorkView() {
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true, margin: "-20px" }}
                           transition={{ duration: 0.4 }}
-                          className="bg-white border border-[#EBE5DA] hover:border-brand-sage/50 rounded-2xl p-4 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                          className="bg-white border border-[#EBE5DA] rounded-2xl p-4 shadow-xs flex flex-col justify-between"
                         >
                           <div className="space-y-3">
                             <div className="flex items-center gap-2">
@@ -1935,7 +1885,7 @@ export default function WorkView() {
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {activeProject.deliverables.map((del, dIdx) => (
-                                <div key={dIdx} className="flex items-start gap-2 bg-[#FAF8F5]/70 hover:bg-[#FAF8F5] p-2.5 rounded-xl border border-brand-border/40 hover:border-brand-sage/40 transition-all">
+                                <div key={dIdx} className="flex items-start gap-2 bg-[#FAF8F5]/70 p-2.5 rounded-xl border border-brand-border/40">
                                   <CheckCircle2 className="w-3.5 h-3.5 text-brand-sage shrink-0 mt-0.5" />
                                   <span className="font-sans text-sm text-brand-text font-medium leading-tight">{del}</span>
                                 </div>
@@ -1951,9 +1901,9 @@ export default function WorkView() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-20px" }}
                             transition={{ duration: 0.4, delay: 0.05 }}
-                            className="bg-white border border-[#EBE5DA] hover:border-brand-sage/50 rounded-2xl p-4 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group/impact min-h-[160px]"
+                            className="bg-white border border-[#EBE5DA] rounded-2xl p-4 shadow-xs flex flex-col justify-between relative overflow-hidden min-h-[160px]"
                           >
-                            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-brand-sage/5 blur-xl group-hover/impact:bg-brand-sage/10 transition-all duration-300" />
+                            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-brand-sage/5 blur-xl pointer-events-none" />
                             
                             <div className="flex items-center gap-2 relative z-10">
                               <div className="p-1.5 rounded-lg bg-brand-sage/15 text-brand-sage">
@@ -1970,7 +1920,7 @@ export default function WorkView() {
                                   'grid-cols-1 sm:grid-cols-3'
                                 }`}>
                                   {validMetrics.map((m, mIdx) => (
-                                    <div key={mIdx} className="bg-[#FAF8F5]/70 border border-brand-border/40 p-2.5 rounded-xl flex flex-col items-center justify-center text-center shadow-3xs transition-all duration-300 hover:border-brand-sage/50 hover:bg-white hover:-translate-y-0.5 h-full">
+                                    <div key={mIdx} className="bg-[#FAF8F5]/70 border border-brand-border/40 p-2.5 rounded-xl flex flex-col items-center justify-center text-center shadow-3xs h-full">
                                       <span className="font-serif font-extrabold text-xl text-brand-sage leading-none">
                                         {m.value}
                                       </span>
@@ -2231,43 +2181,33 @@ export default function WorkView() {
             </span>
             <span className="text-brand-border h-4 w-px bg-brand-border/80" />
 
-            {/* Direct Image Migration Button */}
             <button 
-              onClick={() => {
-                setSyncModalTab('images');
-                setShowSyncModal(true);
+              onClick={async () => {
+                setIsSyncing(true);
+                try {
+                  const projects = getLiveProjects();
+                  const res = await fetch('/api/admin/sync-all-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ projects })
+                  });
+                  if (res.ok) {
+                    setSyncStatusMsg('Saved!');
+                    setTimeout(() => setSyncStatusMsg(null), 2500);
+                  }
+                } catch {
+                  setSyncStatusMsg('Error');
+                  setTimeout(() => setSyncStatusMsg(null), 2500);
+                } finally {
+                  setIsSyncing(false);
+                }
               }}
-              className="bg-brand-sage text-white hover:bg-brand-sage/90 px-2.5 py-1 rounded-lg font-sans font-bold flex items-center gap-1.5 cursor-pointer shadow-3xs transition-all"
-              id="admin-btn-migrate-images-cloud"
-              title="Migrate Current Images to Supabase Cloud"
+              disabled={isSyncing}
+              className="text-brand-muted hover:text-brand-text transition-colors cursor-pointer flex items-center gap-1 font-sans disabled:opacity-50"
+              title="Save all changes to server disk"
             >
-              <ImageIcon className="w-3.5 h-3.5" /> Migrate Images
-            </button>
-
-            {/* Preview Cloud Images Toggle */}
-            <button
-              onClick={() => setPreviewCloudImagesOnly(!previewCloudOnly)}
-              className={`px-2.5 py-1 rounded-lg font-sans font-medium flex items-center gap-1.5 cursor-pointer transition-all ${
-                previewCloudOnly 
-                  ? 'bg-emerald-100 text-emerald-800 font-bold border border-emerald-300' 
-                  : 'text-brand-muted hover:text-brand-text hover:bg-brand-bg'
-              }`}
-              title={previewCloudOnly ? "Disable Cloud-Only Preview (Restore local overrides)" : "Preview what public Vercel visitors see"}
-            >
-              {previewCloudOnly ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-brand-muted" />}
-              <span>{previewCloudOnly ? 'Cloud View ON' : 'Cloud View'}</span>
-            </button>
-
-            <span className="text-brand-border h-4 w-px bg-brand-border/80" />
-            <button 
-              onClick={() => {
-                setSyncModalTab('migrate');
-                setShowSyncModal(true);
-              }}
-              className="text-brand-muted hover:text-brand-text transition-colors cursor-pointer flex items-center gap-1 font-sans"
-              title="Sync & Persist to GitHub / Vercel"
-            >
-              <CloudUpload className="w-3.5 h-3.5" /> Full Sync
+              <CloudUpload className="w-3.5 h-3.5" />
+              <span>{isSyncing ? 'Saving...' : syncStatusMsg || 'Save Changes'}</span>
             </button>
             <span className="text-brand-border h-4 w-px bg-brand-border/80" />
             <button 
@@ -2296,14 +2236,7 @@ export default function WorkView() {
         )}
       </div>
 
-      {/* Admin Persistence Migration Modal */}
-      <AdminSyncModal 
-        isOpen={showSyncModal} 
-        onClose={() => setShowSyncModal(false)} 
-        initialTab={syncModalTab}
-      />
-
-      {/* Admin Login Modal with Supabase Auth */}
+      {/* Admin Login Modal */}
       <AdminLoginModal
         isOpen={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
@@ -2481,39 +2414,19 @@ export default function WorkView() {
                           )}
                         </div>
 
-                        {/* Upload & URL Controls */}
+                        {/* Image Path Controls */}
                         <div className="flex-1 space-y-2.5 w-full">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <label className="px-3.5 py-1.5 rounded-xl bg-brand-sage text-white text-xs font-bold hover:bg-brand-sage/90 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs">
-                              <Upload className="w-3.5 h-3.5" /> Upload File from Computer
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    if (!file.type.startsWith('image/')) {
-                                      alert('Please select an image file');
-                                      return;
-                                    }
-                                    try {
-                                      const compressed = await compressImageFile(file, 1400, 1000, 0.85);
-                                      setEditCardImage(compressed);
-                                    } catch {
-                                      const reader = new FileReader();
-                                      reader.onload = (ev) => {
-                                        const res = ev.target?.result as string;
-                                        if (res) setEditCardImage(res);
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  }
-                                  e.target.value = '';
-                                }}
-                              />
-                            </label>
-                            <span className="text-[10px] font-mono text-brand-muted">or paste file URL below</span>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-mono font-bold text-brand-muted uppercase">Image Path in public/images/</span>
+                            {editCardImage && (
+                              <button
+                                type="button"
+                                onClick={() => setEditCardImage('')}
+                                className="text-[10px] font-mono text-red-600 hover:underline cursor-pointer"
+                              >
+                                Clear Cover
+                              </button>
+                            )}
                           </div>
 
                           <input
@@ -2524,7 +2437,7 @@ export default function WorkView() {
                             className="w-full px-3 py-2 border border-brand-border rounded-xl focus:border-brand-sage focus:outline-none text-xs text-brand-text font-medium bg-white"
                           />
                           <p className="text-[10px] font-mono text-brand-muted/80">
-                            Recommended ratio: 3:2 or 16:9. Supports PNG, JPG, WebP, SVG, and Data URLs.
+                            Referenced from static assets in public/images/ (e.g. /images/project-cover.jpg)
                           </p>
                         </div>
                       </div>
@@ -2813,38 +2726,8 @@ export default function WorkView() {
                                   </div>
 
                                   <div className="flex-1 space-y-1.5 min-w-0">
-                                    <div className="flex items-center gap-1.5">
-                                      <label className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono text-white bg-brand-sage hover:bg-brand-sage/90 cursor-pointer shadow-3xs transition-all shrink-0">
-                                        <Upload className="w-3 h-3" /> Upload Pic
-                                        <input
-                                          type="file"
-                                          accept="image/*"
-                                          className="hidden"
-                                          onChange={async (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) {
-                                              if (!file.type.startsWith('image/')) {
-                                                alert('Please select a valid image file');
-                                                return;
-                                              }
-                                              try {
-                                                const compressed = await compressImageFile(file, 1400, 1000, 0.85);
-                                                box.setImageUrl(compressed);
-                                              } catch {
-                                                const reader = new FileReader();
-                                                reader.onload = (re) => {
-                                                  const result = re.target?.result as string;
-                                                  if (result) {
-                                                    box.setImageUrl(result);
-                                                  }
-                                                };
-                                                reader.readAsDataURL(file);
-                                              }
-                                            }
-                                            e.target.value = '';
-                                          }}
-                                        />
-                                      </label>
+                                    <div className="flex items-center justify-between gap-1.5">
+                                      <span className="text-[10px] font-mono text-brand-muted">Image Path:</span>
                                       {hasImg && (
                                         <button
                                           type="button"
@@ -2858,7 +2741,7 @@ export default function WorkView() {
                                     </div>
                                     <input
                                       type="text"
-                                      placeholder="Or paste image URL / path"
+                                      placeholder="e.g. /images/project-display-01.png"
                                       value={box.imageUrl}
                                       onChange={(e) => box.setImageUrl(e.target.value)}
                                       className="w-full px-2 py-0.5 border border-brand-border/60 rounded-md text-[9px] bg-[#FAF8F5] focus:outline-none focus:border-brand-sage truncate"

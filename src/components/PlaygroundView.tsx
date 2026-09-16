@@ -38,7 +38,6 @@ import { CaseStudyView } from './CaseStudyView';
 import { uploadMediaToCloud } from '../services/storageService';
 import { savePlaygroundProject, getCachedPlaygroundData } from '../services/portfolioService';
 import { subscribeToAuth } from '../services/authService';
-import { isPreviewCloudImagesOnly, EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED } from '../services/imageMigrationService';
 import { TarotDemo } from './demos/TarotDemo';
 import { ScenarioBuilderDemo } from './demos/ScenarioBuilderDemo';
 import { AnalyticsDemo } from './demos/AnalyticsDemo';
@@ -115,6 +114,7 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
     },
     bgPhoto: '/images/teajourney.jpg',
     logoPhoto: '/images/logo-teajourney.png',
+    logoScale: 'scale-[1.38]',
     demoUrl: 'https://your-tea-journey.vercel.app/',
     defaultGallery: [
       {
@@ -186,7 +186,7 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
     },
     bgPhoto: '/images/lumipal.jpg',
     logoPhoto: '/images/logo-lumipal.png',
-    logoScale: 'scale-[1.25]',
+    logoScale: 'scale-[1.38]',
     demoUrl: 'https://lumi-pal.vercel.app/',
     defaultGallery: [
       {
@@ -258,6 +258,7 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
     },
     bgPhoto: '/images/tarot.jpg',
     logoPhoto: '/images/logo-tarot.png',
+    logoScale: 'scale-[1.38]',
     demoUrl: 'https://katiehong03.github.io/PositiveTarot/',
     defaultGallery: [
       {
@@ -329,7 +330,7 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
     },
     bgPhoto: '/images/pawgress.jpg',
     logoPhoto: '/images/logo-pawgress.png',
-    logoScale: 'scale-[2.1] translate-x-1',
+    logoScale: 'scale-[1.28]',
     demoUrl: 'https://katiehong03.github.io/Pawgress/login.html',
     defaultGallery: [
       {
@@ -373,25 +374,6 @@ export const PLAYGROUND_PROJECTS: SandboxProject[] = [
 
 // Helper to retrieve saved showcase images
 const getSavedProjectImages = (projectId: string, defaultImages: ShowcaseImage[]): ShowcaseImage[] => {
-  const isCloudOnly = isPreviewCloudImagesOnly();
-
-  // 1. Check Supabase cached playground gallery
-  const cloudData = getCachedPlaygroundData();
-  if (cloudData && cloudData.galleries && cloudData.galleries[projectId] && Array.isArray(cloudData.galleries[projectId]) && cloudData.galleries[projectId].length > 0) {
-    return cloudData.galleries[projectId].map((item: ShowcaseImage) => {
-      if (item && item.url) {
-        return { ...item, url: normalizeImageUrl(item.url) || item.url };
-      }
-      return item;
-    });
-  }
-
-  // If previewing cloud images only, bypass local browser overrides
-  if (isCloudOnly) {
-    return defaultImages;
-  }
-
-  // 2. Fall back to localStorage if available
   try {
     const saved = localStorage.getItem(`portfolio_playground_images_${projectId}`);
     if (saved) {
@@ -533,17 +515,29 @@ function VerticalShowcaseReel({
             onClick={() => onImageClick(item.url)}
             className="group/item relative rounded-xl overflow-hidden border border-brand-border bg-white shadow-sm hover:shadow-md transition-all duration-300 cursor-zoom-in hover:scale-[1.02] transform-gpu"
           >
-            <div className="aspect-[16/10] w-full overflow-hidden bg-neutral-100 relative">
+            <div className="aspect-[16/10] w-full overflow-hidden bg-[#ECE8E1] relative flex items-center justify-center">
               <img
                 src={item.url}
                 alt={item.title}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-105"
                 onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
+                  const target = e.currentTarget;
+                  target.style.display = 'none';
+                  const fallback = target.parentElement?.querySelector('.reel-img-fallback');
+                  if (fallback) (fallback as HTMLElement).style.display = 'flex';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-80 group-hover/item:opacity-90 transition-opacity" />
+              <div className="reel-img-fallback hidden absolute inset-0 bg-[#EFEBE4] flex flex-col items-center justify-center p-3 text-center">
+                <ImageIcon className="w-5 h-5 text-brand-muted/70 mb-1" />
+                <span className="text-[10px] font-mono font-medium text-brand-text truncate max-w-[88%]">
+                  {item.url.replace('/images/', '')}
+                </span>
+                <span className="text-[9px] font-sans text-brand-muted mt-0.5">
+                  Save to public/images/ to view
+                </span>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-80 group-hover/item:opacity-90 transition-opacity pointer-events-none" />
               
               {/* Expand Icon */}
               <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 backdrop-blur-xs text-white flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity shadow-xs">
@@ -551,7 +545,7 @@ function VerticalShowcaseReel({
               </div>
 
               {/* Bottom Caption */}
-              <div className="absolute bottom-2.5 left-3 right-3 text-left">
+              <div className="absolute bottom-2.5 left-3 right-3 text-left pointer-events-none">
                 <p className="text-[9.5px] font-mono text-white/70 uppercase tracking-wider">
                   0{((idx % images.length) + 1)} • {title}
                 </p>
@@ -608,17 +602,11 @@ export default function PlaygroundView() {
 
   // Logo Customization State (Admin Mode)
   const [customLogos, setCustomLogos] = useState<Record<string, string>>(() => {
-    const isCloudOnly = isPreviewCloudImagesOnly();
     const map: Record<string, string> = {};
-    const cached = getCachedPlaygroundData();
     PLAYGROUND_PROJECTS.forEach(p => {
-      if (cached[p.id]?.logo_url) {
-        map[p.id] = cached[p.id].logo_url!;
-      } else if (!isCloudOnly) {
-        const saved = localStorage.getItem(`portfolio_playground_logo_${p.id}`);
-        if (saved) {
-          map[p.id] = saved;
-        }
+      const saved = localStorage.getItem(`portfolio_playground_logo_${p.id}`);
+      if (saved) {
+        map[p.id] = saved;
       }
     });
     return map;
@@ -629,25 +617,13 @@ export default function PlaygroundView() {
   // Project Content & Tags Customization State (Admin Mode)
   const [customProjectData, setCustomProjectData] = useState<Record<string, Partial<SandboxProject>>>(() => {
     const map: Record<string, Partial<SandboxProject>> = {};
-    const cached = getCachedPlaygroundData();
     PLAYGROUND_PROJECTS.forEach(p => {
-      if (cached[p.id]) {
-        const c = cached[p.id];
-        map[p.id] = {
-          title: c.title,
-          tagline: c.subtitle,
-          overview: c.overview,
-          skills: c.tags,
-          demoUrl: c.demo_url
-        };
-      } else {
-        const saved = localStorage.getItem(`portfolio_playground_project_data_${p.id}`);
-        if (saved) {
-          try {
-            map[p.id] = JSON.parse(saved);
-          } catch (e) {
-            console.error('Failed to parse saved project data', e);
-          }
+      const saved = localStorage.getItem(`portfolio_playground_project_data_${p.id}`);
+      if (saved) {
+        try {
+          map[p.id] = JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse saved project data', e);
         }
       }
     });
@@ -761,30 +737,22 @@ export default function PlaygroundView() {
     };
   }, []);
 
-  // Listen for Cloud Images Preview toggles and Supabase updates
+  // Listen for playground updates
   useEffect(() => {
     const refreshPlaygroundImages = () => {
-      const isCloudOnly = isPreviewCloudImagesOnly();
       const map: Record<string, string> = {};
-      const cached = getCachedPlaygroundData();
       PLAYGROUND_PROJECTS.forEach(p => {
-        if (cached[p.id]?.logo_url) {
-          map[p.id] = cached[p.id].logo_url!;
-        } else if (!isCloudOnly) {
-          const saved = localStorage.getItem(`portfolio_playground_logo_${p.id}`);
-          if (saved) {
-            map[p.id] = saved;
-          }
+        const saved = localStorage.getItem(`portfolio_playground_logo_${p.id}`);
+        if (saved) {
+          map[p.id] = saved;
         }
       });
       setCustomLogos(map);
     };
 
-    window.addEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, refreshPlaygroundImages);
     window.addEventListener('portfolio_cloud_playground_updated', refreshPlaygroundImages);
 
     return () => {
-      window.removeEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, refreshPlaygroundImages);
       window.removeEventListener('portfolio_cloud_playground_updated', refreshPlaygroundImages);
     };
   }, []);
@@ -1011,32 +979,6 @@ export default function PlaygroundView() {
     setNewImageUrl('');
   };
 
-  // Upload logo directly for a project (from card or modal)
-  const handleLogoFileUpload = async (projectId: string, file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file (PNG, JPG, WEBP, etc.)');
-      return;
-    }
-    try {
-      let finalUrl = '';
-      try {
-        finalUrl = await uploadMediaToCloud(file, `${projectId}-logo`);
-      } catch {
-        finalUrl = await compressImageFile(file, 600, 600, 0.9);
-      }
-      savePlaygroundProject(projectId, { logo_url: finalUrl }).catch(err => console.warn('Cloud save logo:', err));
-      localStorage.setItem(`portfolio_playground_logo_${projectId}`, finalUrl);
-      setCustomLogos(prev => ({ ...prev, [projectId]: finalUrl }));
-      if (managingProject && managingProject.id === projectId) {
-        setTempLogoPhoto(finalUrl);
-      }
-      setFailedImages(prev => ({ ...prev, [`logo-${projectId}`]: false, [`modal-logo-${projectId}`]: false }));
-    } catch (e) {
-      console.error('Failed to process logo upload:', e);
-      alert('Failed to process logo image upload.');
-    }
-  };
-
   const handleResetLogo = (projectId: string) => {
     localStorage.removeItem(`portfolio_playground_logo_${projectId}`);
     setCustomLogos(prev => {
@@ -1087,34 +1029,6 @@ export default function PlaygroundView() {
         return copy;
       });
       window.dispatchEvent(new Event(`playground_images_updated_${managingProject.id}`));
-    }
-  };
-
-  // Add uploaded image to temp list
-  const handleFileUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file (PNG, JPG, WEBP, etc.)');
-      return;
-    }
-    try {
-      let finalUrl = '';
-      try {
-        finalUrl = await uploadMediaToCloud(file, `${managingProject?.id || 'playground'}-gallery-${Date.now()}`);
-      } catch {
-        finalUrl = await compressImageFile(file, 1200, 900, 0.85);
-      }
-      const newImg: ShowcaseImage = {
-        id: `custom-${Date.now()}`,
-        url: finalUrl,
-        title: newImageTitle.trim() || file.name.replace(/\.[^/.]+$/, ''),
-        caption: newImageCaption.trim() || undefined
-      };
-      setTempGallery(prev => [...prev, newImg]);
-      setNewImageTitle('');
-      setNewImageCaption('');
-    } catch (e) {
-      console.error('Failed to process image:', e);
-      alert('Failed to process image upload.');
     }
   };
 
@@ -1309,6 +1223,7 @@ export default function PlaygroundView() {
                       <div className="flex items-center gap-3.5">
                         {(() => {
                           const currentLogo = customLogos[project.id] || project.logoPhoto;
+                          const scaleClass = project.logoScale || '';
                           return currentLogo && !failedImages[`logo-${project.id}`] ? (
                             <div className="relative group/logo w-12 h-12 rounded-2xl bg-[#FAF8F5] border border-brand-border/60 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
                               <img
@@ -1316,50 +1231,14 @@ export default function PlaygroundView() {
                                 alt={`${project.title} logo`}
                                 referrerPolicy="no-referrer"
                                 onError={() => setFailedImages(prev => ({ ...prev, [`logo-${project.id}`]: true }))}
-                                className="w-full h-full object-cover"
+                                className={`w-full h-full object-cover transition-transform duration-300 ${scaleClass}`}
                               />
-                              {isAdminMode && (
-                                <label
-                                  title="Admin: Click to upload/change app logo"
-                                  className="absolute inset-0 bg-black/65 text-white flex flex-col items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity cursor-pointer z-10 text-[9px] font-mono font-bold"
-                                >
-                                  <Camera className="w-3.5 h-3.5 mb-0.5" />
-                                  <span>Edit</span>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) handleLogoFileUpload(project.id, file);
-                                    }}
-                                  />
-                                </label>
-                              )}
                             </div>
                           ) : (
-                            <div className="relative group/logo w-12 h-12 rounded-2xl bg-brand-sage/15 border border-brand-sage/30 text-2xl flex items-center justify-center shrink-0">
-                              {project.emoji}
-                              {isAdminMode && (
-                                <label
-                                  title="Admin: Click to upload app logo"
-                                  className="absolute inset-0 bg-black/65 text-white flex flex-col items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity cursor-pointer z-10 text-[9px] font-mono font-bold rounded-2xl"
-                                >
-                                  <Upload className="w-3.5 h-3.5 mb-0.5" />
-                                  <span>Logo</span>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) handleLogoFileUpload(project.id, file);
-                                    }}
-                                  />
-                                </label>
-                              )}
-                            </div>
-                          );
+                              <div className="relative w-12 h-12 rounded-2xl bg-brand-sage/15 border border-brand-sage/30 text-2xl flex items-center justify-center shrink-0">
+                                {project.emoji}
+                              </div>
+                            );
                         })()}
                         <div>
                           <h2 className="font-serif font-bold text-2xl sm:text-3xl text-brand-text tracking-tight uppercase">
@@ -1790,6 +1669,7 @@ export default function PlaygroundView() {
                     <div className="flex items-center gap-3.5 border-b border-[#FAF8F5] pb-4 pr-8">
                       {(() => {
                         const currentModalLogo = customLogos[activeProjectModal.id] || activeProjectModal.logoPhoto;
+                        const modalScaleClass = activeProjectModal.logoScale || '';
                         return (
                           <div className="w-12 h-12 rounded-2xl bg-[#FAF8F4] border border-brand-border/60 flex items-center justify-center text-2xl overflow-hidden shrink-0">
                             {currentModalLogo && !failedImages[`modal-logo-${activeProjectModal.id}`] ? (
@@ -1798,7 +1678,7 @@ export default function PlaygroundView() {
                                 alt={activeProjectModal.title}
                                 referrerPolicy="no-referrer"
                                 onError={() => setFailedImages(prev => ({ ...prev, [`modal-logo-${activeProjectModal.id}`]: true }))}
-                                className="w-full h-full object-cover"
+                                className={`w-full h-full object-cover ${modalScaleClass}`}
                               />
                             ) : (
                               activeProjectModal.emoji
@@ -2022,7 +1902,7 @@ export default function PlaygroundView() {
                         <img
                           src={tempLogoPhoto}
                           alt="App Logo Preview"
-                          className="w-full h-full object-cover"
+                          className={`w-full h-full object-cover ${managingProject.logoScale || ''}`}
                         />
                       ) : (
                         <span className="text-3xl">{managingProject.emoji}</span>
@@ -2031,36 +1911,13 @@ export default function PlaygroundView() {
 
                     <div className="flex-1 w-full space-y-2">
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                        {/* File Upload Button for Logo */}
-                        <label className="flex items-center justify-center gap-2 py-2 px-3.5 rounded-xl bg-brand-text hover:bg-brand-peach text-white font-sans text-xs font-bold cursor-pointer transition-all shadow-2xs">
-                          <Upload className="w-3.5 h-3.5 text-brand-peach" />
-                          <span>Upload New Logo (PNG/JPG)</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                try {
-                                  const compressed = await compressImageFile(file, 600, 600, 0.9);
-                                  setTempLogoPhoto(compressed);
-                                } catch (err) {
-                                  console.error(err);
-                                  alert('Failed to process image file.');
-                                }
-                              }
-                            }}
-                          />
-                        </label>
-
-                        {/* URL Input for Logo */}
+                        {/* URL / Path Input for Logo */}
                         <div className="flex items-center gap-1.5 flex-1">
                           <input
                             type="text"
                             value={newLogoUrlInput}
                             onChange={(e) => setNewLogoUrlInput(e.target.value)}
-                            placeholder="Or paste Logo image URL"
+                            placeholder="Image URL or static path in /images/..."
                             className="font-sans text-xs bg-white border border-brand-border px-3 py-1.5 rounded-xl flex-1 focus:outline-brand-sage"
                           />
                           <button
@@ -2182,38 +2039,21 @@ export default function PlaygroundView() {
                     />
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
-                    {/* Direct Upload Button */}
-                    <label className="flex-1 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-brand-sage hover:bg-brand-sage/90 text-white font-sans text-xs font-bold cursor-pointer transition-all shadow-2xs">
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>Upload Image File (PNG/JPG)</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileUpload(file);
-                        }}
-                      />
-                    </label>
-
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <input
-                        type="text"
-                        value={newImageUrl}
-                        onChange={(e) => setNewImageUrl(e.target.value)}
-                        placeholder="Or paste image URL"
-                        className="font-sans text-xs bg-[#FAF8F5] border border-brand-border px-3 py-2 rounded-xl flex-1 sm:w-48 focus:outline-brand-sage"
-                      />
-                      <button
-                        onClick={handleAddUrlImage}
-                        disabled={!newImageUrl.trim()}
-                        className="px-3 py-2 rounded-xl bg-brand-text text-white text-xs font-bold disabled:opacity-40 cursor-pointer"
-                      >
-                        Add URL
-                      </button>
-                    </div>
+                  <div className="flex items-center gap-2 w-full pt-1">
+                    <input
+                      type="text"
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="Image URL or static path in /images/ (e.g. /images/playground-01.png)"
+                      className="font-sans text-xs bg-[#FAF8F5] border border-brand-border px-3 py-2 rounded-xl flex-1 focus:outline-brand-sage"
+                    />
+                    <button
+                      onClick={handleAddUrlImage}
+                      disabled={!newImageUrl.trim()}
+                      className="px-4 py-2 rounded-xl bg-brand-sage text-white text-xs font-bold disabled:opacity-40 cursor-pointer shadow-xs shrink-0"
+                    >
+                      Add Image
+                    </button>
                   </div>
                 </div>
               </div>

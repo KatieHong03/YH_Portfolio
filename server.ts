@@ -104,30 +104,41 @@ async function startServer() {
     return dataUrl;
   };
 
-  // Admin Single Image Upload endpoint (saves directly to public/images/)
-  app.post("/api/admin/save-image", (req, res) => {
+  // GET Portfolio Data Endpoint (serves permanently saved text & data to every computer)
+  app.get("/api/portfolio-data", (req, res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     try {
-      const { filename, dataUrl } = req.body;
-      if (!dataUrl) {
-        return res.status(400).json({ error: "Missing dataUrl" });
+      const canonicalDataPath = path.join(cwd, "src", "data", "canonicalAdminData.json");
+      if (fs.existsSync(canonicalDataPath)) {
+        const raw = fs.readFileSync(canonicalDataPath, "utf8");
+        const data = JSON.parse(raw);
+        return res.json({
+          success: true,
+          ...data
+        });
       }
-
-      const savedPath = saveImageBuffer(dataUrl, filename || "uploaded-image");
-      res.json({
+      return res.json({
         success: true,
-        url: savedPath,
-        filename: path.basename(savedPath)
+        projects: null,
+        playgroundProjects: null,
+        philosophies: null,
+        cv: null
       });
     } catch (err: any) {
-      console.error("Save image error:", err);
-      res.status(500).json({ error: err.message || "Failed to save image" });
+      console.error("Get portfolio data error:", err);
+      res.status(500).json({ error: err.message || "Failed to load portfolio data" });
     }
   });
 
-  // Admin Sync All Data endpoint:
-  // Recovers Base64 images, converts to public/images/ files,
-  // updates source data, and guarantees GitHub/Vercel persistence.
-  app.post("/api/admin/sync-all-data", (req, res) => {
+  // Admin Single Image Upload endpoint (disabled in admin mode - all images are stored in public/images/)
+  app.post("/api/admin/save-image", (req, res) => {
+    res.status(403).json({ 
+      error: "Image uploads are disabled in Admin Mode. Please add static image files to public/images/ directly." 
+    });
+  });
+
+  // Admin Sync / Save Data handler: saves text & content permanently to canonicalAdminData.json on server disk
+  const handleSaveAllData = (req: express.Request, res: express.Response) => {
     try {
       const {
         projects,
@@ -138,109 +149,119 @@ async function startServer() {
         cv
       } = req.body;
 
-      let imagesRecovered = 0;
-
-      // 1. Process Projects
-      const migratedProjects = (projects || []).map((project: any) => {
-        const p = { ...project };
-        const projId = cleanFilename(p.id || "project", "");
-
-        // Process cover image
-        if (p.cardImage) {
-          const original = p.cardImage;
-          p.cardImage = saveImageBuffer(p.cardImage, `${projId}-cover`);
-          if (original !== p.cardImage && original.startsWith("data:")) {
-            imagesRecovered++;
-          }
-        }
-
-        // Process displayPlaceholders
-        if (Array.isArray(p.displayPlaceholders)) {
-          p.displayPlaceholders = p.displayPlaceholders.map((ph: any, idx: number) => {
-            const updated = { ...ph };
-            if (updated.imageUrl) {
-              const original = updated.imageUrl;
-              updated.imageUrl = saveImageBuffer(updated.imageUrl, `${projId}-display-0${idx + 1}`);
-              if (original !== updated.imageUrl && original.startsWith("data:")) {
-                imagesRecovered++;
-              }
-            } else {
-              // Ensure default permanent image reference exists
-              const defaultName = `${projId}-display-0${idx + 1}.png`;
-              if (fs.existsSync(path.join(publicImagesDir, defaultName))) {
-                updated.imageUrl = `/images/${defaultName}`;
-              }
-            }
-            return updated;
-          });
-        }
-
-        return p;
-      });
-
-      // 2. Process Playground Projects & Logos
-      const migratedPlaygroundLogos: Record<string, string> = {};
-      if (playgroundLogos && typeof playgroundLogos === "object") {
-        for (const [key, val] of Object.entries(playgroundLogos)) {
-          if (typeof val === "string" && val) {
-            const original = val;
-            const saved = saveImageBuffer(val, `logo-${key}`);
-            migratedPlaygroundLogos[key] = saved;
-            if (original !== saved && original.startsWith("data:")) {
-              imagesRecovered++;
-            }
-          }
+      const canonicalDataPath = path.join(cwd, "src", "data", "canonicalAdminData.json");
+      let existingData: any = {};
+      if (fs.existsSync(canonicalDataPath)) {
+        try {
+          existingData = JSON.parse(fs.readFileSync(canonicalDataPath, "utf8"));
+        } catch (e) {
+          console.warn("Could not parse existing canonical data:", e);
         }
       }
 
-      // 3. Process Playground Galleries
-      const migratedPlaygroundGalleries: Record<string, any[]> = {};
-      if (playgroundGalleries && typeof playgroundGalleries === "object") {
-        for (const [key, list] of Object.entries(playgroundGalleries)) {
-          if (Array.isArray(list)) {
-            migratedPlaygroundGalleries[key] = list.map((item: any, idx: number) => {
-              const copy = { ...item };
-              if (copy.url) {
-                const original = copy.url;
-                copy.url = saveImageBuffer(copy.url, `${key}-gallery-0${idx + 1}`);
-                if (original !== copy.url && original.startsWith("data:")) {
-                  imagesRecovered++;
-                }
+      // 1. Process Projects (Preserve or update)
+      let resolvedProjects = existingData.projects || [];
+      if (Array.isArray(projects) && projects.length > 0) {
+        resolvedProjects = projects.map((project: any) => {
+          const p = { ...project };
+          const projId = cleanFilename(p.id || "project", "");
+
+          // Normalize cover image to static file path if present
+          if (p.cardImage && p.cardImage.startsWith("data:")) {
+            p.cardImage = saveImageBuffer(p.cardImage, `${projId}-cover`);
+          }
+
+          // Normalize displayPlaceholders
+          if (Array.isArray(p.displayPlaceholders)) {
+            p.displayPlaceholders = p.displayPlaceholders.map((ph: any, idx: number) => {
+              const updated = { ...ph };
+              if (updated.imageUrl && updated.imageUrl.startsWith("data:")) {
+                updated.imageUrl = saveImageBuffer(updated.imageUrl, `${projId}-display-0${idx + 1}`);
               }
-              return copy;
+              return updated;
             });
           }
-        }
+
+          return p;
+        });
       }
 
-      // 4. Save canonical admin snapshot file
-      const canonicalDataPath = path.join(cwd, "src", "data", "canonicalAdminData.json");
+      // 2. Process Playground Projects
+      let resolvedPlaygroundProjects = existingData.playgroundProjects || {};
+      if (playgroundProjects && typeof playgroundProjects === "object" && Object.keys(playgroundProjects).length > 0) {
+        resolvedPlaygroundProjects = {
+          ...resolvedPlaygroundProjects,
+          ...playgroundProjects
+        };
+      }
+
+      // 3. Process Playground Logos & Galleries
+      const resolvedPlaygroundLogos = {
+        ...(existingData.playgroundLogos || {}),
+        ...(playgroundLogos || {})
+      };
+
+      const resolvedPlaygroundGalleries = {
+        ...(existingData.playgroundGalleries || {}),
+        ...(playgroundGalleries || {})
+      };
+
+      // 4. Process Philosophies (About Page)
+      let resolvedPhilosophies = existingData.philosophies || [];
+      if (Array.isArray(philosophies) && philosophies.length > 0) {
+        resolvedPhilosophies = philosophies;
+      }
+
+      // 5. Process CV (CV Page)
+      let resolvedCV = existingData.cv || null;
+      if (cv !== undefined && cv !== null) {
+        resolvedCV = {
+          ...(existingData.cv || {}),
+          ...cv
+        };
+      }
+
+      // 6. Write permanent canonical snapshot to disk
       const snapshot = {
         updatedAt: new Date().toISOString(),
         version: "2.0.0",
-        projects: migratedProjects,
-        playgroundProjects: playgroundProjects || {},
-        playgroundLogos: migratedPlaygroundLogos,
-        playgroundGalleries: migratedPlaygroundGalleries,
-        philosophies: philosophies || [],
-        cv: cv || null
+        projects: resolvedProjects,
+        playgroundProjects: resolvedPlaygroundProjects,
+        playgroundLogos: resolvedPlaygroundLogos,
+        playgroundGalleries: resolvedPlaygroundGalleries,
+        philosophies: resolvedPhilosophies,
+        cv: resolvedCV
       };
 
+      // Save to src/data/canonicalAdminData.json
       fs.writeFileSync(canonicalDataPath, JSON.stringify(snapshot, null, 2), "utf8");
+
+      // Also mirror to dist/data/canonicalAdminData.json if dist exists
+      try {
+        const distDataDir = path.join(cwd, "dist", "data");
+        if (fs.existsSync(path.join(cwd, "dist"))) {
+          if (!fs.existsSync(distDataDir)) {
+            fs.mkdirSync(distDataDir, { recursive: true });
+          }
+          fs.writeFileSync(path.join(distDataDir, "canonicalAdminData.json"), JSON.stringify(snapshot, null, 2), "utf8");
+        }
+      } catch (distErr) {
+        console.warn("Could not mirror to dist directory:", distErr);
+      }
 
       res.json({
         success: true,
-        imagesRecovered,
-        migratedProjects,
-        migratedPlaygroundLogos,
-        migratedPlaygroundGalleries,
-        message: `Successfully migrated ${imagesRecovered} images and synchronized all admin data to source control.`
+        message: "All text and project data permanently saved to server.",
+        updatedAt: snapshot.updatedAt
       });
     } catch (err: any) {
       console.error("Sync all data error:", err);
       res.status(500).json({ error: err.message || "Failed to sync data" });
     }
-  });
+  };
+
+  app.post("/api/admin/sync-all-data", handleSaveAllData);
+  app.post("/api/admin/save-data", handleSaveAllData);
 
   // Admin export bundle endpoint
   app.get("/api/admin/export-bundle", (req, res) => {

@@ -11,7 +11,6 @@ import { AppLogosTicker } from './AppLogosTicker';
 import { getCachedCVContent, saveCVContent } from '../services/portfolioService';
 import { uploadMediaToCloud } from '../services/storageService';
 import { subscribeToAuth, logoutAdmin } from '../services/authService';
-import { isPreviewCloudImagesOnly, EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED } from '../services/imageMigrationService';
 import { 
   Briefcase, 
   GraduationCap, 
@@ -223,31 +222,24 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
 
   // Custom Resume PDF State
   const [customResumePdf, setCustomResumePdf] = useState<string>(() => {
-    const isCloudOnly = isPreviewCloudImagesOnly();
     const cached = getCachedCVContent();
     if (cached?.resume_meta?.url) return cached.resume_meta.url;
-    if (isCloudOnly) return '';
     return localStorage.getItem('portfolio_custom_resume_pdf') || '';
   });
 
   useEffect(() => {
     const refreshResumePdf = () => {
-      const isCloudOnly = isPreviewCloudImagesOnly();
       const cached = getCachedCVContent();
       if (cached?.resume_meta?.url) {
         setCustomResumePdf(cached.resume_meta.url);
-      } else if (isCloudOnly) {
-        setCustomResumePdf('');
       } else {
         setCustomResumePdf(localStorage.getItem('portfolio_custom_resume_pdf') || '');
       }
     };
 
-    window.addEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, refreshResumePdf);
     window.addEventListener('portfolio_cloud_cv_updated', refreshResumePdf);
 
     return () => {
-      window.removeEventListener(EVENT_PREVIEW_CLOUD_IMAGES_TOGGLED, refreshResumePdf);
       window.removeEventListener('portfolio_cloud_cv_updated', refreshResumePdf);
     };
   }, []);
@@ -269,7 +261,6 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
 
   const [showResumeUploadModal, setShowResumeUploadModal] = useState<boolean>(false);
   const [uploadSuccessMsg, setUploadSuccessMsg] = useState<string>('');
-  const [isDraggingPdf, setIsDraggingPdf] = useState<boolean>(false);
 
   // Experiences State
   const [experiences, setExperiences] = useState<ExperienceItem[]>(() => {
@@ -725,58 +716,7 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
     localStorage.setItem('portfolio_cv_skills_v4', JSON.stringify(updated));
   };
 
-  // PDF Resume Upload & Reset Handlers
-  const handlePdfUpload = async (file: File) => {
-    if (!file) return;
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      alert('Please select a valid PDF file (.pdf)');
-      return;
-    }
-    if (file.size > 20 * 1024 * 1024) {
-      alert('File size exceeds 20MB limit.');
-      return;
-    }
-
-    const sizeStr = file.size > 1024 * 1024 
-      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
-      : `${Math.round(file.size / 1024)} KB`;
-    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-    let finalUrl = '';
-    try {
-      finalUrl = await uploadMediaToCloud(file, `resume-${Date.now()}.pdf`, 'portfolio-media');
-    } catch {
-      finalUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.readAsDataURL(file);
-      });
-    }
-
-    setCustomResumePdf(finalUrl);
-    setCustomResumeName(file.name);
-    setCustomResumeDate(dateStr);
-    setCustomResumeSize(sizeStr);
-
-    saveCVContent({
-      resumeMeta: {
-        url: finalUrl,
-        name: file.name,
-        size: sizeStr,
-        updatedAt: dateStr
-      }
-    }).catch(err => console.warn('Cloud save resume meta:', err));
-
-    localStorage.setItem('portfolio_custom_resume_pdf', finalUrl);
-    localStorage.setItem('portfolio_custom_resume_name', file.name);
-    localStorage.setItem('portfolio_custom_resume_date', dateStr);
-    localStorage.setItem('portfolio_custom_resume_size', sizeStr);
-
-    window.dispatchEvent(new Event('storage'));
-    setUploadSuccessMsg(`Resume PDF "${file.name}" successfully uploaded and activated!`);
-    setTimeout(() => setUploadSuccessMsg(''), 4000);
-  };
-
+  // PDF Resume Reset Handler
   const handleResetResumePdf = () => {
     if (window.confirm('Are you sure you want to revert to the default system resume PDF?')) {
       setCustomResumePdf('');
@@ -1776,63 +1716,34 @@ export default function CVView({ setCurrentTab, onOpenConnect }: CVViewProps) {
                 </div>
               </div>
 
-              {/* Upload Drop Zone */}
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDraggingPdf(true);
-                }}
-                onDragLeave={() => setIsDraggingPdf(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDraggingPdf(false);
-                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    handlePdfUpload(e.dataTransfer.files[0]);
-                  }
-                }}
-                onClick={() => {
-                  const input = document.getElementById('admin-pdf-file-input');
-                  if (input) input.click();
-                }}
-                className={`
-                  border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group
-                  ${isDraggingPdf 
-                    ? 'border-brand-sage bg-brand-sage/10 scale-[1.01]' 
-                    : 'border-brand-border hover:border-brand-sage hover:bg-brand-sage/5'
-                  }
-                `}
-              >
+              {/* Document Configuration */}
+              <div className="bg-[#FAF8F5] border border-brand-border/80 rounded-2xl p-4 sm:p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-brand-sage" />
+                  <span className="font-mono text-xs font-bold text-brand-text uppercase">Resume Document Path</span>
+                </div>
+                <p className="font-sans text-xs text-brand-muted">
+                  Static document path in public/ (e.g. /resume.pdf) or URL for the download button.
+                </p>
                 <input
-                  id="admin-pdf-file-input"
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  className="hidden"
+                  type="text"
+                  value={customResumePdf || '/resume.pdf'}
                   onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handlePdfUpload(e.target.files[0]);
-                    }
+                    const val = e.target.value;
+                    setCustomResumePdf(val);
+                    localStorage.setItem('portfolio_custom_resume_pdf', val);
+                    saveCVContent({
+                      resumeMeta: {
+                        url: val,
+                        name: customResumeName || 'Yuting_Katie_Hong_Resume.pdf',
+                        size: customResumeSize || '1.2 MB',
+                        updatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                      }
+                    }).catch(err => console.warn('Cloud save resume meta:', err));
                   }}
+                  placeholder="/resume.pdf"
+                  className="font-mono text-xs bg-white border border-brand-border px-3 py-2 rounded-xl w-full focus:outline-brand-sage"
                 />
-
-                <div className="w-12 h-12 rounded-full bg-brand-sage/10 border border-brand-sage/20 flex items-center justify-center text-brand-sage group-hover:scale-110 transition-transform">
-                  <Upload className="w-6 h-6" />
-                </div>
-
-                <div className="space-y-1">
-                  <p className="font-sans text-sm font-semibold text-brand-text">
-                    Click to select PDF or drag and drop here
-                  </p>
-                  <p className="font-mono text-[11px] text-brand-muted">
-                    Supports .PDF documents (up to 20MB)
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  className="mt-1 px-4 py-2 bg-brand-sage text-white rounded-xl text-xs font-bold hover:bg-brand-sage/90 shadow-xs cursor-pointer transition-transform group-hover:scale-105"
-                >
-                  Choose PDF File
-                </button>
               </div>
 
               {/* Informational hint & Footer Action */}
