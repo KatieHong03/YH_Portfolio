@@ -78,24 +78,17 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
   }, []);
 
-  // Typewriter effect for hero headline
-  const [typedChars, setTypedChars] = useState<number>(0);
-  const fullHeadline = "Bridging complexity & understanding through thoughtful learning design.";
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      let current = 0;
-      const interval = setInterval(() => {
-        current += 1;
-        setTypedChars(current);
-        if (current >= fullHeadline.length) {
-          clearInterval(interval);
-        }
-      }, 32);
-      return () => clearInterval(interval);
-    }, 250);
-    return () => clearTimeout(timer);
-  }, []);
+  // Word-by-word typewriter/stagger fade-in effect for hero headline
+  const headlineWords = [
+    { text: "Bridging", isHighlight: false },
+    { text: "complexity", isHighlight: true },
+    { text: "&", isHighlight: true },
+    { text: "understanding", isHighlight: true },
+    { text: "through", isHighlight: false },
+    { text: "thoughtful", isHighlight: false },
+    { text: "learning", isHighlight: false },
+    { text: "design.", isHighlight: false },
+  ];
 
   // Admin Mode
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
@@ -239,42 +232,43 @@ export default function AboutView({ setCurrentTab, onOpenConnect }: AboutViewPro
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center relative z-10">
           <div className="lg:col-span-7 space-y-6 sm:space-y-7">
-            {/* Animated Large Display Headline with Typewriter Effect */}
-            <motion.div 
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
+            {/* Animated Large Display Headline with Staggered Word Fade-In */}
+            <motion.h1 
+              initial="hidden"
+              whileInView="visible"
               viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1,
+                    delayChildren: 0.15,
+                  }
+                }
+              }}
+              className="font-serif text-3xl sm:text-5xl md:text-5.5xl lg:text-6xl xl:text-[66px] leading-[1.18] sm:leading-[1.14] text-brand-text tracking-tight font-normal"
             >
-              {(() => {
-                const part1 = "Bridging ";
-                const part2 = "complexity & understanding";
-                const part3 = " through thoughtful learning design.";
-                const len1 = part1.length;
-                const len2 = len1 + part2.length;
-                const len3 = fullHeadline.length;
-
-                const text1 = fullHeadline.slice(0, Math.min(typedChars, len1));
-                const text2 = typedChars > len1 ? fullHeadline.slice(len1, Math.min(typedChars, len2)) : "";
-                const text3 = typedChars > len2 ? fullHeadline.slice(len2, Math.min(typedChars, len3)) : "";
-                const isTyping = typedChars < fullHeadline.length;
-
-                return (
-                  <h1 className="font-serif text-3xl sm:text-5xl md:text-5.5xl lg:text-6xl xl:text-[66px] leading-[1.18] sm:leading-[1.14] text-brand-text tracking-tight font-normal min-h-[2.4em] sm:min-h-[2.3em]">
-                    {text1}
-                    {text2 && (
-                      <span className="italic font-serif text-[#1C1A17] font-medium">
-                        {text2}
-                      </span>
-                    )}
-                    {text3}
-                    {isTyping && (
-                      <span className="inline-block w-[3px] h-[0.88em] bg-brand-text align-baseline ml-1 animate-pulse" />
-                    )}
-                  </h1>
-                );
-              })()}
-            </motion.div>
+              {headlineWords.map((word, idx) => (
+                <React.Fragment key={idx}>
+                  <motion.span
+                    variants={{
+                      hidden: { opacity: 0, y: 10, filter: 'blur(4px)' },
+                      visible: { 
+                        opacity: 1, 
+                        y: 0, 
+                        filter: 'blur(0px)',
+                        transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } 
+                      }
+                    }}
+                    className={word.isHighlight ? "inline-block italic font-serif text-[#1C1A17] font-medium" : "inline-block"}
+                  >
+                    {word.text}
+                  </motion.span>
+                  {idx < headlineWords.length - 1 && " "}
+                </React.Fragment>
+              ))}
+            </motion.h1>
 
             {/* Subtext description with delayed fade-in */}
             <motion.p 
